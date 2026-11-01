@@ -28,14 +28,20 @@ jobs:
         run: |
           yes | sdkmanager --licenses || true
 
-      - name: Install Capacitor & Generate Android Project
+      - name: Prepare Web Assets & Generate Capacitor Project
         run: |
+          # 1. 公開用 www フォルダを作成してアセットをコピー
+          mkdir -p www
+          cp index.html manifest.json sw.js icon-192.png icon-512.png www/
+          
+          # 2. Capacitor 初期化
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Spell Blaster" "com.spellblaster.app" --web-dir "."
+          npx cap init "Spell Blaster" "com.spellblaster.app" --web-dir "www"
           npx cap add android
+          npx cap copy android
           
-          # アプリアイコンを適用
+          # 3. アプリアイコンをネイティブ側に適用
           if [ -f "icon-512.png" ]; then
             mkdir -p android/app/src/main/res/mipmap-xxxhdpi
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
