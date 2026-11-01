@@ -15020,6 +15020,11 @@ const getLocalDateStr = (d = new Date()) => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+const getYesterdayDateStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return getLocalDateStr(d);
+};
 
     // ===== src/utils/scoring.js =====
 const getFeverPhase = (combo) => {
@@ -15204,13 +15209,19 @@ const calculateReward = ({
   // 10. 連続ファームペナルティ
   if (isRepeatedFarm) sp *= 0.1;
 
-  // 11. ヒントモードペナルティ
-  if (isHintMode) sp *= 0.25;
+  const rawSP = Math.max(1, Math.round(sp));
+
+  // 11. ヒントモードペナルティ (-75% カット)
+  if (isHintMode) {
+    sp *= 0.25;
+  }
 
   const earnedSP = Math.max(1, Math.round(sp));
 
   return {
     earnedSP,
+    rawSP,
+    isHintMode: !!isHintMode,
     isJackpot,
     isCritical,
     jackpotMult
@@ -15353,7 +15364,13 @@ const MenuScreen = ({
   setScreen
 }) => {
   const todayStr = getLocalDateStr();
+  const yesterdayStr = getYesterdayDateStr();
   const todayLog = dailyLogs?.[todayStr] || { answered: 0, correct: 0, earnedGold: 0 };
+  const yesterdayLog = dailyLogs?.[yesterdayStr] || { answered: 0, correct: 0, earnedGold: 0 };
+  const todayEarnedSP = todayLog.earnedGold || 0;
+  const yesterdayEarnedSP = yesterdayLog.earnedGold || 0;
+  const spDiffFromYesterday = todayEarnedSP - yesterdayEarnedSP;
+  const totalEarnedSP = gameData.totalEarned || gameData.gold || 0;
   const currentTier = getDailyOverdriveTier(todayLog.answered);
 
   // 次の目標までの計算
@@ -15384,265 +15401,244 @@ const MenuScreen = ({
   })();
 
   return (
-    <div className="max-w-md mx-auto p-4 flex flex-col min-h-screen justify-between pb-6 animate-fadeIn">
-      <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
+    <div className="max-w-md mx-auto px-3.5 py-2 flex flex-col justify-between min-h-screen text-slate-100 font-sans select-none animate-fadeIn">
+      {/* 1. 最上部ヘッダー (極薄スマート設計) */}
+      <div className="flex items-center justify-between pb-1.5 border-b border-slate-800/80 mb-1.5">
+        <button
+          onClick={() => setScreen('badges')}
+          className="flex items-center gap-1 bg-slate-900/90 border border-amber-500/40 rounded-lg px-2 py-0.5 text-left active:scale-95"
+        >
+          <span className="text-xs">👑</span>
+          <span className="text-[10px] font-mono font-bold text-amber-300 truncate max-w-[120px]">
+            {gameData.equippedTitle || 'かけだしのスペラー'}
+          </span>
+        </button>
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setScreen('badges')}
-            className="flex items-center gap-1.5 bg-slate-900 border border-amber-500/50 rounded-xl px-2.5 py-1 text-left"
+            onClick={() => setIsHintMode(!isHintMode)}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[9px] font-mono font-bold active:scale-95 transition-all ${
+              isHintMode
+                ? 'bg-amber-950 text-amber-300 border-amber-500'
+                : 'bg-slate-900 text-slate-500 border-slate-800'
+            }`}
           >
-            <span className="text-sm">👑</span>
-            <span className="text-[11px] font-mono font-bold text-amber-300 truncate max-w-[130px]">
-              {gameData.equippedTitle || 'かけだしのスペラー'}
+            <span>👁️ HINT {isHintMode ? 'ON' : 'OFF'}</span>
+            {isHintMode && <span className="text-[7px] bg-amber-500 text-black px-0.5 rounded font-black">-75%</span>}
+          </button>
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-xs active:scale-95"
+          >
+            {soundEnabled ? '🔊' : '🔇'}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. タイトル (コンパクト化) */}
+      <div className="text-center my-1">
+        <h1 className="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-500 font-mono cyber-title">
+          SPELL BLASTER
+        </h1>
+      </div>
+
+      {/* 3. 【統合版】サイバー成長HUD (SP3大メトリクス + デイリーノルマを完全統合・かぶり解消) */}
+      <div className="bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-[#070b1c] border border-cyan-500/40 rounded-2xl p-2.5 mb-2 shadow-[0_0_20px_rgba(6,182,212,0.12)] relative overflow-hidden backdrop-blur-md">
+        {/* SP 3大メトリクス (現在SP / 累計SP / 昨日からの変化) */}
+        <div className="grid grid-cols-3 gap-1.5 text-center font-mono mb-2">
+          {/* 現在SP */}
+          <div className="bg-black/60 border border-yellow-500/40 rounded-xl p-1.5 shadow-inner flex flex-col justify-between">
+            <div className="text-[8px] text-yellow-400 font-bold uppercase tracking-wider">現在 SP</div>
+            <div className="text-base font-black text-yellow-300 my-0.5 tracking-tight truncate">
+              {gameData.gold.toLocaleString()}<span className="text-[8px] font-normal text-yellow-400 ml-0.5">SP</span>
+            </div>
+            <div className="text-[7px] text-slate-400 truncate">所持コイン</div>
+          </div>
+
+          {/* 累計SP */}
+          <div className="bg-black/60 border border-purple-500/40 rounded-xl p-1.5 shadow-inner flex flex-col justify-between">
+            <div className="text-[8px] text-purple-300 font-bold uppercase tracking-wider">累計 SP</div>
+            <div className="text-base font-black text-purple-200 my-0.5 tracking-tight truncate">
+              {totalEarnedSP.toLocaleString()}<span className="text-[8px] font-normal text-purple-300 ml-0.5">SP</span>
+            </div>
+            <div className="text-[7px] text-purple-400/80 truncate">通算獲得</div>
+          </div>
+
+          {/* 昨日からの変化 (文字かぶりを完全に解消！) */}
+          <div className={`bg-black/60 border rounded-xl p-1.5 shadow-inner flex flex-col justify-between ${
+            spDiffFromYesterday >= 0 ? 'border-emerald-500/50' : 'border-slate-800'
+          }`}>
+            <div className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider">今日獲得(増分)</div>
+            <div className="text-base font-black text-emerald-300 my-0.5 tracking-tight truncate">
+              <span>{todayEarnedSP > 0 ? `+${todayEarnedSP.toLocaleString()}` : '0'}</span>
+              <span className="text-[8px] font-normal text-emerald-400 ml-0.5">SP</span>
+            </div>
+            <div className="text-[7px] text-emerald-400/90 truncate font-sans">
+              {yesterdayEarnedSP > 0 ? (
+                spDiffFromYesterday > 0 ? `昨日より +${spDiffFromYesterday} UP! 🔥` : `昨日: ${yesterdayEarnedSP} SP`
+              ) : (
+                todayEarnedSP > 0 ? '昨日超え達成! 🚀' : '本日未獲得'
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* デイリーノルマ & ランク状況 (スマート1行バー) */}
+        <div className="bg-black/40 border border-slate-800 rounded-xl p-1.5 font-mono">
+          <div className="flex items-center justify-between text-[9px] mb-1">
+            <span className="flex items-center gap-1 font-bold text-cyan-300">
+              <span>🔥 {gameData.loginStreakDays || 1}日連続</span>
+              <span className="text-slate-600">|</span>
+              <span>🎯 今日 {todayLog.answered}問</span>
             </span>
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsHintMode(!isHintMode)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[10px] font-mono font-bold active:scale-95 transition-all ${
-                isHintMode ? 'bg-amber-950/80 text-amber-400 border-amber-500' : 'bg-slate-900 text-slate-500 border-slate-800'
+            <span className={`px-1.5 py-0.2 rounded border text-[8px] font-bold ${currentTier.badgeClass}`}>
+              {currentTier.icon} {currentTier.name} {currentTier.multiplier > 1.0 ? `(${currentTier.multiplier}x)` : ''}
+            </span>
+          </div>
+
+          {/* プログレスバー (20/50/100/150問) */}
+          <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-slate-800 relative">
+            <div
+              className={`h-full transition-all duration-500 ${
+                currentTier.tier === 'god'
+                  ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-cyan-400 animate-pulse'
+                  : currentTier.tier === 'gold'
+                  ? 'bg-gradient-to-r from-cyan-400 to-amber-400'
+                  : currentTier.tier === 'silver'
+                  ? 'bg-gradient-to-r from-indigo-500 to-cyan-400'
+                  : 'bg-gradient-to-r from-emerald-500 to-cyan-500'
               }`}
-            >
-              <span>👁️ HINT</span>
-              <span className={isHintMode ? 'text-amber-200' : 'text-slate-600'}>{isHintMode ? 'ON' : 'OFF'}</span>
-            </button>
-            <button
-              onClick={() => setScreen('shop')}
-              className="flex items-center gap-1 bg-yellow-950/80 border border-yellow-500/70 rounded-xl px-2.5 py-1"
-            >
-              <span className="text-xs">🪙</span>
-              <span className="text-xs font-mono font-black text-yellow-300">{gameData.gold.toLocaleString()}</span>
-            </button>
-            <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs"
-            >
-              {soundEnabled ? '🔊' : '🔇'}
-            </button>
+              style={{ width: `${tierProgressPercent}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[7px] text-slate-500 mt-0.5">
+            <span className={todayLog.answered >= 20 ? 'text-emerald-400 font-bold' : ''}>20問(銅)</span>
+            <span className={todayLog.answered >= 50 ? 'text-cyan-400 font-bold' : ''}>50問(銀1.2x)</span>
+            <span className={todayLog.answered >= 100 ? 'text-amber-400 font-bold' : ''}>100問(金1.5x)</span>
+            <span className={todayLog.answered >= 150 ? 'text-fuchsia-400 font-bold' : ''}>150問(神2.0x)</span>
           </div>
         </div>
+      </div>
 
-        <div className="text-center my-3">
-          <div className="text-[10px] text-cyan-400 font-mono tracking-widest font-black uppercase">CYBER DRILL ENGINE</div>
-          <h1 className="text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-500 font-mono cyber-title mt-0.5">
-            SPELL BLASTER
-          </h1>
-        </div>
-
-        {/* 限界突破デイリーダッシュボード (サイバーHUD計器パネル) */}
-        <div className="bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-cyan-950/70 border border-cyan-500/40 rounded-3xl p-3 mb-3 shadow-[0_0_20px_rgba(6,182,212,0.15)] relative overflow-hidden backdrop-blur-md">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 font-mono text-[11px] font-black tracking-wider text-cyan-300">
-              <span className="text-cyan-400 animate-pulse">⚡</span>
-              <span>DAILY OVERDRIVE</span>
-            </div>
-            {/* 現在の到達TIERバッジ */}
-            <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold ${currentTier.badgeClass}`}>
-              <span>{currentTier.icon}</span>
-              <span>{currentTier.name}</span>
-              {currentTier.multiplier > 1.0 && (
-                <span className="text-white font-black bg-black/40 px-1 rounded text-[9px]">
-                  {currentTier.multiplier}x SP
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* 3連ネオンメトリクス */}
-          <div className="grid grid-cols-3 gap-1.5 text-center font-mono mb-2">
-            {/* 連続日数 */}
-            <div className="bg-black/60 border border-orange-500/30 rounded-xl p-1.5 shadow-inner">
-              <div className="text-[8px] text-orange-400 font-bold uppercase tracking-wider flex items-center justify-center gap-0.5">
-                <span>🔥</span> STREAK
-              </div>
-              <div className="text-lg font-black text-orange-300 tracking-tight">
-                {gameData.loginStreakDays || 1}<span className="text-[9px] text-orange-400/80 font-normal ml-0.5">日</span>
-              </div>
-            </div>
-
-            {/* 本日の問題数・正解率 */}
-            <div className="bg-black/60 border border-cyan-500/30 rounded-xl p-1.5 shadow-inner">
-              <div className="text-[8px] text-cyan-400 font-bold uppercase tracking-wider flex items-center justify-center gap-0.5">
-                <span>🎯</span> DRILLS
-              </div>
-              <div className="text-lg font-black text-cyan-300 tracking-tight">
-                {todayLog.answered}<span className="text-[9px] text-cyan-400/80 font-normal ml-0.5">問</span>
-              </div>
-            </div>
-
-            {/* 本日獲得SP */}
-            <div className="bg-black/60 border border-yellow-500/30 rounded-xl p-1.5 shadow-inner">
-              <div className="text-[8px] text-yellow-400 font-bold uppercase tracking-wider flex items-center justify-center gap-0.5">
-                <span>🪙</span> EARNED
-              </div>
-              <div className="text-lg font-black text-yellow-300 tracking-tight">
-                +{todayLog.earnedGold.toLocaleString()}
-              </div>
-            </div>
-          </div>
-
-          {/* 段階制ステップインジケーター (目標ライン一覧) */}
-          <div className="grid grid-cols-4 gap-1 mb-1.5 font-mono text-[8px] text-center">
-            <div className={`p-1 rounded-lg border transition-all ${todayLog.answered >= 20 ? 'bg-emerald-950/70 border-emerald-500 text-emerald-300 font-bold' : 'bg-black/40 border-slate-800 text-slate-500'}`}>
-              <div>20問</div>
-              <div className="text-[7px]">🥉 BRONZE</div>
-            </div>
-            <div className={`p-1 rounded-lg border transition-all ${todayLog.answered >= 50 ? 'bg-cyan-950/70 border-cyan-400 text-cyan-300 font-bold shadow-[0_0_8px_rgba(6,182,212,0.3)]' : 'bg-black/40 border-slate-800 text-slate-500'}`}>
-              <div>50問</div>
-              <div className="text-[7px]">🥈 ×1.2 SP</div>
-            </div>
-            <div className={`p-1 rounded-lg border transition-all ${todayLog.answered >= 100 ? 'bg-amber-950/70 border-amber-500 text-amber-300 font-bold shadow-[0_0_8px_rgba(245,158,11,0.3)]' : 'bg-black/40 border-slate-800 text-slate-500'}`}>
-              <div>100問</div>
-              <div className="text-[7px]">🥇 ×1.5 SP</div>
-            </div>
-            <div className={`p-1 rounded-lg border transition-all ${todayLog.answered >= 150 ? 'bg-fuchsia-950/80 border-fuchsia-500 text-fuchsia-300 font-bold shadow-[0_0_10px_rgba(217,70,239,0.4)] animate-pulse' : 'bg-black/40 border-slate-800 text-slate-500'}`}>
-              <div>150問+</div>
-              <div className="text-[7px]">💎 ×2.0 SP</div>
-            </div>
-          </div>
-
-          {/* プログレスバー */}
-          <div>
-            <div className="w-full bg-black/60 h-2 rounded-full overflow-hidden border border-slate-800 relative">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  currentTier.tier === 'god'
-                    ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-cyan-400 shadow-[0_0_15px_rgba(244,63,94,0.6)] animate-pulse'
-                    : currentTier.tier === 'gold'
-                    ? 'bg-gradient-to-r from-cyan-400 to-amber-400'
-                    : currentTier.tier === 'silver'
-                    ? 'bg-gradient-to-r from-indigo-500 to-cyan-400'
-                    : 'bg-gradient-to-r from-emerald-500 to-cyan-500'
-                }`}
-                style={{ width: `${tierProgressPercent}%` }}
-              />
-            </div>
-            <div className="text-[8px] font-mono mt-1 text-center text-slate-400 truncate">
-              {todayLog.answered === 0 && "⚡ 10問ドリルを開始してBRONZE(20問)を目指そう！"}
-              {todayLog.answered > 0 && todayLog.answered < 20 && `🔥 あと ${20 - todayLog.answered}問 でデイリーノルマ(BRONZE)達成！`}
-              {todayLog.answered >= 20 && todayLog.answered < 50 && `🥈 BRONZE達成！あと ${50 - todayLog.answered}問 で全問SP 1.2倍ゾーン！`}
-              {todayLog.answered >= 50 && todayLog.answered < 100 && `🥇 SILVER達成中(1.2倍)！あと ${100 - todayLog.answered}問 でGOLD(1.5倍)！`}
-              {todayLog.answered >= 100 && todayLog.answered < 150 && `💎 GOLD達成中(1.5倍)！あと ${150 - todayLog.answered}問 で極限GOD TIER(2.0倍)！`}
-              {todayLog.answered >= 150 && "🪐 【神話到達】全問SPが常時2倍のGOD TIER！無限周回ゾーン！"}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 mb-4 text-left shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">TARGET LEVEL</span>
-            <select
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
-              className="bg-black/60 border border-indigo-500/50 rounded-xl px-2.5 py-1 text-xs font-mono text-cyan-300 focus:border-cyan-400"
-            >
-              <option value="ALL">🌟 全てのレベル ({words.length}語)</option>
-              {levels.map(l => {
-                const count = words.filter(w => (w.level || 'デフォルト') === l).length;
-                return (
-                  <option key={l} value={l}>
-                    {l} ({count}語)
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          <div className="mt-2">
-            <div className="flex justify-between text-[11px] font-mono mb-1">
-              <span className="text-slate-300">
-                MASTERED: <strong className="text-cyan-300">{currentLevelInfo.masteredCount}</strong> / {currentLevelInfo.total} 語
-              </span>
-              <span className="text-cyan-400 font-bold">{currentLevelInfo.percent}%</span>
-            </div>
-            <div className="w-full bg-black/60 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-500"
-                style={{ width: `${currentLevelInfo.percent}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-              <span>✨ PURE: {currentLevelInfo.pureCount}</span>
-              <span>🛡️ SURVIVOR: {currentLevelInfo.survivorCount}</span>
-              {currentLevelInfo.dueCount > 0 && (
-                <span className="text-rose-400 font-bold animate-pulse">⚠️ 襲来ボス: {currentLevelInfo.dueCount}</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2.5">
-          <button
-            onClick={() => startQuiz('normal')}
-            className="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-black py-4 px-4 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 transition-all text-sm font-mono tracking-wider flex items-center justify-between"
+      {/* 4. レベル選択 (超薄型スマートカード) */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl px-3 py-2 mb-2 shadow-sm font-mono text-left">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">LEVEL</span>
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value)}
+            className="bg-black/60 border border-indigo-500/50 rounded-lg px-2 py-0.5 text-[11px] text-cyan-300 focus:border-cyan-400"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl p-1 bg-black/20 rounded-xl">⚡</span>
-              <div className="text-left">
-                <div className="text-sm font-black text-black">START 10-SPELL DRILL</div>
-                <div className="text-[10px] text-slate-900 font-bold">10問1セットの電脳スペル特訓</div>
-              </div>
-            </div>
-            <span className="text-lg">▶</span>
-          </button>
+            <option value="ALL">🌟 全てのレベル ({words.length}語)</option>
+            {levels.map(l => {
+              const count = words.filter(w => (w.level || 'デフォルト') === l).length;
+              return (
+                <option key={l} value={l}>
+                  {l} ({count}語)
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        <div>
+          <div className="flex justify-between text-[9px] mb-0.5">
+            <span className="text-slate-300">
+              習得率: <strong className="text-cyan-300">{currentLevelInfo.masteredCount}</strong>/{currentLevelInfo.total}語
+            </span>
+            <span className="text-cyan-400 font-bold">{currentLevelInfo.percent}%</span>
+          </div>
+          <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-slate-800">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-500"
+              style={{ width: `${currentLevelInfo.percent}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[8px] text-slate-500 mt-0.5">
+            <span>✨ PURE: {currentLevelInfo.pureCount}</span>
+            <span>🛡️ SURVIVOR: {currentLevelInfo.survivorCount}</span>
+            {currentLevelInfo.dueCount > 0 && (
+              <span className="text-rose-400 font-bold animate-pulse">⚠️ 襲来ボス: {currentLevelInfo.dueCount}</span>
+            )}
+          </div>
+        </div>
+      </div>
 
+      {/* 5. START ボタン群 (メイン大ボタン + サブ2連横並びで高さを大幅圧縮！) */}
+      <div className="space-y-1.5 mb-2">
+        {/* メイン: 10問ドリル */}
+        <button
+          onClick={() => startQuiz('normal')}
+          className="w-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-black py-3 px-3.5 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 transition-all font-mono tracking-wider flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl p-1 bg-black/20 rounded-xl">⚡</span>
+            <div className="text-left">
+              <div className="text-sm font-black text-black">START 10-SPELL DRILL</div>
+              <div className="text-[9px] text-slate-900 font-bold">10問1セットの電脳スペル特訓</div>
+            </div>
+          </div>
+          <span className="text-base font-black">START ▶</span>
+        </button>
+
+        {/* サブ: エンドレス & 苦手特訓 を横並びにして縦幅を半減！ */}
+        <div className="grid grid-cols-2 gap-1.5 font-mono">
           <button
             onClick={() => startQuiz('endless')}
-            className="w-full bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-black py-3.5 px-4 rounded-2xl shadow-[0_0_20px_rgba(217,70,239,0.3)] active:scale-95 transition-all text-sm font-mono tracking-wider flex items-center justify-between"
+            className="bg-gradient-to-r from-fuchsia-950 to-pink-950 border border-fuchsia-500/50 hover:border-fuchsia-400 text-pink-200 py-2 px-2.5 rounded-xl shadow active:scale-95 transition-all text-left flex items-center gap-2"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl p-1 bg-black/20 rounded-xl">♾️</span>
-              <div className="text-left">
-                <div className="text-sm font-black text-white">ENDLESS MODE</div>
-                <div className="text-[10px] text-pink-200">QUITするまで続く無限スペル無双</div>
-              </div>
+            <span className="text-lg">♾️</span>
+            <div>
+              <div className="text-[11px] font-black text-white">ENDLESS</div>
+              <div className="text-[8px] text-pink-300/80">無限スペル無双</div>
             </div>
-            <span className="text-lg">▶</span>
           </button>
 
           <button
             onClick={() => startQuiz('weak')}
-            className="w-full bg-slate-900 border border-rose-500/50 text-rose-300 font-black py-3.5 px-4 rounded-2xl active:scale-95 transition-all text-sm font-mono tracking-wider flex items-center justify-between"
+            className="bg-gradient-to-r from-rose-950 to-red-950 border border-rose-500/50 hover:border-rose-400 text-rose-200 py-2 px-2.5 rounded-xl shadow active:scale-95 transition-all text-left flex items-center gap-2"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl p-1 bg-rose-950/60 rounded-xl">🎯</span>
-              <div className="text-left">
-                <div className="text-sm font-black text-white">WEAK SPOT OVERDRIVE</div>
-                <div className="text-[10px] text-slate-400">誤答・未習得・ボスを集中的に攻略</div>
-              </div>
+            <span className="text-lg">🎯</span>
+            <div>
+              <div className="text-[11px] font-black text-white">WEAK SPOT</div>
+              <div className="text-[8px] text-rose-300/80">誤答・ボス集中</div>
             </div>
-            <span className="text-lg">▶</span>
           </button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-5 gap-1.5 mt-4">
-          <button onClick={() => setScreen('shop')} className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-col items-center">
-            <span className="text-lg mb-0.5">🛒</span>
+      {/* 6. 最下部ナビゲーション (コンパクト5連アイコン) */}
+      <div>
+        <div className="grid grid-cols-5 gap-1 pt-1 border-t border-slate-900/80">
+          <button onClick={() => setScreen('shop')} className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl flex flex-col items-center active:scale-95">
+            <span className="text-base">🛒</span>
             <span className="text-[8px] font-mono text-slate-300 font-bold">SHOP</span>
           </button>
-          <button onClick={() => setScreen('badges')} className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-col items-center">
-            <span className="text-lg mb-0.5">🎖️</span>
+          <button onClick={() => setScreen('badges')} className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl flex flex-col items-center active:scale-95">
+            <span className="text-base">🎖️</span>
             <span className="text-[8px] font-mono text-slate-300 font-bold">BADGES</span>
           </button>
-          <button onClick={() => setScreen('history')} className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-col items-center">
-            <span className="text-lg mb-0.5">📜</span>
+          <button onClick={() => setScreen('history')} className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl flex flex-col items-center active:scale-95">
+            <span className="text-base">📜</span>
             <span className="text-[8px] font-mono text-slate-300 font-bold">HISTORY</span>
           </button>
-          <button onClick={() => setScreen('analytics')} className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-col items-center">
-            <span className="text-lg mb-0.5">📈</span>
+          <button onClick={() => setScreen('analytics')} className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl flex flex-col items-center active:scale-95">
+            <span className="text-base">📈</span>
             <span className="text-[8px] font-mono text-slate-300 font-bold">ANALYTICS</span>
           </button>
-          <button onClick={() => setScreen('stats')} className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-col items-center">
-            <span className="text-lg mb-0.5">📊</span>
+          <button onClick={() => setScreen('stats')} className="bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl flex flex-col items-center active:scale-95">
+            <span className="text-base">📊</span>
             <span className="text-[8px] font-mono text-slate-300 font-bold">STATS</span>
           </button>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-slate-900 flex items-center justify-around text-[10px] font-mono">
-          <button onClick={() => requireAdmin('import')} className="text-slate-500 hover:text-cyan-400">🔒 CSV登録</button>
-          <button onClick={() => requireAdmin('levels')} className="text-slate-500 hover:text-cyan-400">🔒 レベル管理</button>
-          <button onClick={() => setScreen('backup')} className="text-slate-500 hover:text-cyan-400">🛡️ 保存/復元</button>
+        <div className="mt-1 flex items-center justify-around text-[9px] font-mono text-slate-500">
+          <button onClick={() => requireAdmin('import')} className="hover:text-cyan-400">🔒 CSV登録</button>
+          <button onClick={() => requireAdmin('levels')} className="hover:text-cyan-400">🔒 レベル管理</button>
+          <button onClick={() => setScreen('backup')} className="hover:text-cyan-400">🛡️ 保存/復元</button>
+        </div>
+
+        {/* コピーライト & バージョン表記 */}
+        <div className="mt-1.5 text-center text-[9px] font-mono text-slate-500/80 tracking-wider">
+          &copy; もずずんゲームス &bull; v1.0.0
         </div>
       </div>
     </div>
@@ -15678,6 +15674,30 @@ const QuizScreen = ({
 }) => {
   const currentWord = quizList[currentIndex];
   if (!currentWord) return null;
+
+  const nextBtnRef = useRef(null);
+
+  // 不正解時にEnterキーで即座に次へ進めるグローバルリスナー & ボタンフォーカス
+  useEffect(() => {
+    if (answerStatus !== 'incorrect') return;
+    
+    // NEXTボタンに自動フォーカス
+    const timer = setTimeout(() => {
+      nextBtnRef.current?.focus();
+    }, 50);
+
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleNextQuestion();
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [answerStatus, handleNextQuestion]);
 
   const totalQuestions = isEndlessMode ? quizList.length : 10;
   const progressPercent = Math.min(100, Math.round(((currentIndex + 1) / totalQuestions) * 100));
@@ -15715,11 +15735,15 @@ const QuizScreen = ({
             <button
               onClick={() => setIsHintMode(!isHintMode)}
               className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold active:scale-95 transition-all ${
-                isHintMode ? 'bg-amber-950/80 text-amber-400 border-amber-500' : 'bg-slate-900 text-slate-500 border-slate-800'
+                isHintMode
+                  ? 'bg-amber-950/80 text-amber-300 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                  : 'bg-slate-900 text-slate-500 border-slate-800'
               }`}
             >
-              <span>👁️ HINT</span>
-              <span className={isHintMode ? 'text-amber-200' : 'text-slate-600'}>{isHintMode ? 'ON' : 'OFF'}</span>
+              <span>👁️ HINT {isHintMode ? 'ON' : 'OFF'}</span>
+              {isHintMode && (
+                <span className="text-[8px] bg-amber-500 text-black px-1 rounded font-black">-75% SP</span>
+              )}
             </button>
 
             {currentSessionCombo > 1 && (
@@ -15747,59 +15771,63 @@ const QuizScreen = ({
           </div>
         </div>
 
-        {/* カード本体 */}
+        {/* 問題カード（和文が圧倒的な主役！大きく高コントラストに配置） */}
         <div
-          className={`p-4 rounded-3xl border-2 text-center relative overflow-hidden backdrop-blur transition-all duration-200 ${
+          className={`py-6 px-4 rounded-3xl border-2 text-center relative overflow-hidden backdrop-blur transition-all duration-200 shadow-xl ${
             isBossQuestion
-              ? 'bg-red-950/50 border-red-500 boss-warning'
+              ? 'bg-red-950/60 border-red-500 boss-warning shadow-[0_0_30px_rgba(239,68,68,0.35)]'
               : feverDetail
               ? feverDetail.cardClass
-              : 'bg-slate-900/90 border-indigo-500/40 glow-cyan'
+              : 'bg-gradient-to-b from-slate-900 via-[#0a1026] to-[#060a18] border-cyan-500/50 glow-cyan shadow-[0_0_30px_rgba(6,182,212,0.18)]'
           } ${answerStatus === 'correct' ? 'opacity-50' : ''}`}
         >
-          <div className="text-[10px] text-indigo-400 font-bold uppercase mb-1">{currentWord.pos || '英単語'}</div>
-          <h3 className="text-2xl font-black text-white tracking-wide mb-1">{currentWord.meaning}</h3>
-          {currentWord.example && <p className="text-[10px] text-slate-400 italic mb-2">"{currentWord.example}"</p>}
-          <div className="text-[10px] font-mono text-cyan-300/50">
-            {currentWord.word[0]}... ({currentWord.word.length} letters)
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-[10px] text-cyan-300 font-mono font-bold uppercase tracking-widest bg-cyan-950/80 border border-cyan-800/80 px-2.5 py-0.5 rounded-full">
+              {currentWord.pos || '意味・和訳'}
+            </span>
+            <span className="text-[10px] font-mono text-slate-400">
+              ({currentWord.word.length} letters)
+            </span>
           </div>
+
+          {/* 和文：最も視線が吸い寄せられる大きく鮮明なテキスト */}
+          <h3 className="text-3xl md:text-4xl font-black text-white tracking-wide mb-1 leading-snug drop-shadow-lg">
+            {currentWord.meaning}
+          </h3>
+
+          {currentWord.example && (
+            <p className="text-[11px] text-slate-400 italic mt-2.5 max-w-xs mx-auto line-clamp-2">
+              "{currentWord.example}"
+            </p>
+          )}
         </div>
 
-        {/* スピードボーナスバー */}
-        {answerStatus === null && (
-          <div className="mt-4 px-2">
-            <div className="flex justify-between text-[9px] font-mono text-slate-400 mb-0.5 relative">
-              <span>0s</span>
-              <span className="absolute left-[50%] transform -translate-x-1/2 flex flex-col items-center text-amber-400 font-bold z-10">
-                <span className="text-[12px] mb-[-4px]">👑</span>
-                <span className="bg-black/80 px-1 rounded">2.5s (BONUS)</span>
-              </span>
-              <span>5s+</span>
-            </div>
-            <div className="h-2.5 bg-slate-900 w-full rounded-full overflow-hidden relative border border-slate-800">
-              <div className="absolute left-[50%] top-0 bottom-0 w-0.5 bg-amber-500/50 z-10"></div>
-              <div key={currentIndex} className="h-full speed-timer-grow"></div>
-            </div>
-          </div>
-        )}
-
-        {/* ヒントモード時のお手本スペル大型表示 (学習用ガイド) */}
+        {/* ヒントモード時のお手本スペル (和文を邪魔しない落ち着いたサイバーHUDアシスト) */}
         {isHintMode && answerStatus === null && (
-          <div className="mt-3 bg-amber-950/70 border-2 border-amber-500/80 rounded-2xl p-3 text-center shadow-[0_0_20px_rgba(245,158,11,0.25)]">
-            <div className="text-[10px] text-amber-400 font-mono font-bold tracking-widest uppercase mb-1 flex items-center justify-center gap-1.5">
+          <div className="mt-3 bg-slate-900/90 border border-slate-700/60 rounded-2xl py-2 px-3 text-center shadow-inner">
+            <div className="text-[8px] font-mono font-bold tracking-wider text-amber-400 uppercase mb-0.5 flex items-center justify-center gap-1.5 flex-wrap">
               <span>👁️ SPELL GUIDE</span>
-              <span className="text-[9px] bg-amber-900 text-amber-200 px-1.5 py-0.2 rounded font-mono font-bold">お手本</span>
+              <span className="bg-amber-950/90 text-amber-300 border border-amber-600/50 px-1.5 py-0.2 rounded text-[7px] font-mono">
+                SP -75% / マスター不可(上限2連勝) / FEVER有効
+              </span>
             </div>
-            <div className="font-mono text-2xl md:text-3xl font-black tracking-[0.25em] text-amber-300 py-1 uppercase select-none">
+            <div className="font-mono text-xl md:text-2xl font-bold tracking-[0.25em] text-cyan-200/90 py-0.5 uppercase select-none">
               {currentWord.word}
             </div>
-            <div className="text-[9px] text-amber-400/70 font-mono mt-0.5">
-              スペルを見ながら入力して記憶に定着させましょう
-            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmitAnswer} className="mt-3 space-y-2 relative">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (answerStatus === null) {
+              handleSubmitAnswer(e);
+            } else if (answerStatus === 'incorrect') {
+              handleNextQuestion();
+            }
+          }}
+          className="mt-3 space-y-2 relative"
+        >
           <div className="relative z-10">
             <input
               ref={inputRef}
@@ -15828,14 +15856,41 @@ const QuizScreen = ({
                     <span className="text-xl text-white">+{turnRewardDetail.earnedSP} SP</span>
                   </div>
                 ) : (
-                  <div className="text-emerald-400 font-black text-2xl font-mono stamp-anim bg-black/75 px-5 py-2 rounded-xl backdrop-blur-sm border border-emerald-500/50 shadow-lg flex items-center gap-2">
+                  <div className="text-emerald-400 font-black text-xl md:text-2xl font-mono stamp-anim bg-black/80 px-5 py-2 rounded-xl backdrop-blur-sm border border-emerald-500/50 shadow-lg flex items-center gap-2">
                     <span>PERFECT!</span>
-                    {turnRewardDetail?.earnedSP > 0 && <span className="text-lg text-emerald-300 font-mono">+{turnRewardDetail.earnedSP} SP</span>}
+                    {turnRewardDetail?.earnedSP > 0 && (
+                      <span className="text-base md:text-lg text-emerald-300 font-mono flex items-center gap-1">
+                        <span>+{turnRewardDetail.earnedSP} SP</span>
+                        {turnRewardDetail?.isHintMode && (
+                          <span className="text-[9px] text-amber-300 font-sans font-bold bg-amber-950 px-1 rounded border border-amber-500/40">
+                            HINT -75%
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
             )}
           </div>
+
+          {/* スピードボーナスバー (文字入力の下に移動！) */}
+          {answerStatus === null && (
+            <div className="pt-1 px-1">
+              <div className="flex justify-between text-[8px] font-mono text-slate-400 mb-0.5 relative">
+                <span>0s</span>
+                <span className="absolute left-[50%] transform -translate-x-1/2 flex items-center gap-1 text-amber-400 font-bold z-10 bg-black/80 px-1.5 py-0.2 rounded border border-amber-500/30">
+                  <span className="text-[10px]">👑</span>
+                  <span>2.5s BONUS</span>
+                </span>
+                <span>5s+</span>
+              </div>
+              <div className="h-2 bg-slate-950 w-full rounded-full overflow-hidden relative border border-slate-800 shadow-inner">
+                <div className="absolute left-[50%] top-0 bottom-0 w-0.5 bg-amber-500/60 z-10"></div>
+                <div key={currentIndex} className="h-full speed-timer-grow"></div>
+              </div>
+            </div>
+          )}
 
           {cheatAlertMsg && <div className="text-[10px] font-mono text-amber-400 text-center">{cheatAlertMsg}</div>}
 
@@ -15855,10 +15910,11 @@ const QuizScreen = ({
           ) : (
             answerStatus === 'incorrect' && (
               <button
+                ref={nextBtnRef}
                 type="button"
                 onClick={handleNextQuestion}
                 autoFocus
-                className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in"
+                className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in focus:ring-4 focus:ring-rose-400"
               >
                 NEXT ▶ (ENTER)
               </button>
@@ -17541,8 +17597,9 @@ function App() {
 
     const prevStat = stats[currentWord.id] || { tested: 0, wrong: 0, streak: 0, reviewStep: 0, nextReviewDate: null };
     const oldStreak = prevStat.streak || 0;
+    // HINTモード中は単語ストリーク上限2（マスター不可）。通常時は3以上でマスター。
     const newStreak = isCorrect ? (isCheated ? oldStreak : isHintMode ? Math.min(2, oldStreak + 1) : oldStreak + 1) : 0;
-    const justMastered = oldStreak < 3 && newStreak >= 3;
+    const justMastered = !isHintMode && oldStreak < 3 && newStreak >= 3;
 
     let shieldSaved = false;
     if (!isCorrect && (gameData.shields || 0) > 0) {
@@ -17603,9 +17660,11 @@ function App() {
       }));
 
       if (isJackpot) {
-        setToastNotice(`🎰 JACKPOT ×${rewardResult.jackpotMult}!! +${earnedSP} SP!`);
+        setToastNotice(`🎰 JACKPOT ×${rewardResult.jackpotMult}!! +${earnedSP} SP!${isHintMode ? ' (HINT -75%)' : ''}`);
       } else if (isCritical) {
-        setToastNotice(`💥 CRITICAL! +${earnedSP} SP!`);
+        setToastNotice(`💥 CRITICAL! +${earnedSP} SP!${isHintMode ? ' (HINT -75%)' : ''}`);
+      } else if (isHintMode) {
+        setToastNotice(`+${earnedSP} SP (HINT -75%)`);
       } else {
         setToastNotice(`+${earnedSP} SP!`);
       }
