@@ -41,24 +41,46 @@ jobs:
           npx cap add android
           npx cap copy android
 
-          # 3. Kotlin の重複クラスエラー（Duplicate class）対策を追記
+          # 3. Kotlin 重複クラスエラー対策
           echo "subprojects { configurations.all { resolutionStrategy.eachDependency { details -> if (details.requested.group == 'org.jetbrains.kotlin' && (details.requested.name == 'kotlin-stdlib-jdk7' || details.requested.name == 'kotlin-stdlib-jdk8')) { details.useVersion '1.8.22' } } } }" >> android/build.gradle
           
-          # 4. アプリアイコンをネイティブ側に適用
+          # 4. バージョン番号を自動加算（上書き更新に必須）
+          sed -i 's/versionCode 1/versionCode ${{ github.run_number }}/g' android/app/build.gradle
+
+          # 5. アプリアイコンをネイティブ側に適用
           if [ -f "icon-512.png" ]; then
             mkdir -p android/app/src/main/res/mipmap-xxxhdpi
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
           fi
 
-      - name: Build Standalone APK
+      # リリース用 APK のビルド
+      - name: Build Standalone Release APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
-      - name: Upload Standalone APK Artifact
+      # 固定キーストアで APK に署名
+      - name: Sign APK with Fixed Keystore
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > release.jks
+          BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
+          
+          $BUILD_TOOLS_DIR/apksigner sign --ks release.jks \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --out SpellBlaster-Signed.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Upload Signed Standalone APK
         uses: actions/upload-artifact@v4
         with:
           name: SpellBlaster-Standalone-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: SpellBlaster-Signed.apk
