@@ -16555,6 +16555,9 @@ const QuizScreen = ({
   cheatAlertMsg,
   showQuitModal,
   setShowQuitModal,
+  showCheatModal,
+  setShowCheatModal,
+  handleCheatDetected,
   handleSubmitAnswer,
   handleNextQuestion,
   getFeverPhase,
@@ -16610,6 +16613,30 @@ const QuizScreen = ({
           <div className="text-6xl mb-3">⚠️</div>
           <div className="text-4xl font-black text-amber-300 tracking-widest uppercase font-mono shadow-lg">WARNING!!</div>
           <div className="text-xl font-black text-white mt-2">強敵（復習ターゲット）が急襲！</div>
+        </div>
+      )}
+
+      {/* 🚨 CHEAT DETECTED 大型アラートモーダル 🚨 */}
+      {showCheatModal && (
+        <div className="fixed inset-0 bg-red-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center animate-shake">
+          <div className="text-6xl mb-3 animate-bounce">🚨</div>
+          <div className="text-2xl sm:text-4xl font-black text-rose-400 tracking-wider font-mono border-2 border-rose-500 bg-black/80 px-6 py-2.5 rounded-2xl shadow-[0_0_50px_rgba(244,63,94,0.9)] animate-pulse">
+            CHEAT 検出！
+          </div>
+          <div className="mt-4 text-base sm:text-lg font-black text-white max-w-xs leading-relaxed">
+            1回の操作で複数文字の入力（予測変換・サジェスト・コピペ等）が検知されました！
+          </div>
+          <div className="mt-2 text-xs text-rose-300 font-mono bg-rose-900/60 border border-rose-600 px-4 py-2 rounded-xl">
+            ⚠️ ペナルティ: 不正解扱い / SPゼロ / コンボリセット
+          </div>
+          <div className="mt-6 w-full max-w-xs">
+            <button
+              onClick={() => setShowCheatModal(false)}
+              className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 text-white font-black py-3 px-6 rounded-2xl shadow-[0_0_20px_rgba(225,29,72,0.6)] border border-rose-400 text-sm tracking-widest uppercase font-mono transition-all"
+            >
+              閉じる（次へ進む）
+            </button>
+          </div>
         </div>
       )}
 
@@ -16765,21 +16792,66 @@ const QuizScreen = ({
               disabled={answerStatus !== null}
               placeholder="Type here..."
               value={inputVal}
+              onBeforeInput={(e) => {
+                if (answerStatus !== null) return;
+                const insertData = e.data || '';
+                const inputType = e.inputType || '';
+                // 1回の操作で2文字以上の入力またはサジェスト置換を事前検知
+                if (insertData.length >= 2 || inputType === 'insertReplacementText' || inputType === 'insertFromPaste') {
+                  e.preventDefault();
+                  const detectedVal = (inputVal || '') + insertData;
+                  if (handleCheatDetected) handleCheatDetected(detectedVal);
+                }
+              }}
               onChange={(e) => {
-                let val = e.target.value;
-                val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-                val = val.replace(/　/g, ' ');
-                setInputVal(val);
+                if (answerStatus !== null) return;
+                const rawVal = e.target.value;
+                const prevVal = inputVal || '';
+                const nativeEvent = e.nativeEvent;
+
+                let normalizedVal = rawVal.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                normalizedVal = normalizedVal.replace(/　/g, ' ');
+
+                const diff = normalizedVal.length - prevVal.length;
+                const nativeDataLen = nativeEvent?.data ? nativeEvent.data.length : 0;
+                const inputType = nativeEvent?.inputType || '';
+                const isReplacement = inputType === 'insertReplacementText' || inputType === 'insertFromPaste';
+
+                // 1回の操作で2文字以上増加、またはサジェスト置換 => チート検出＆即時不正解！
+                if (diff >= 2 || nativeDataLen >= 2 || isReplacement) {
+                  if (handleCheatDetected) handleCheatDetected(normalizedVal);
+                  return;
+                }
+
+                setInputVal(normalizedVal);
               }}
               onKeyDown={(e) => {
                 if (e.nativeEvent.isComposing || e.keyCode === 229) {
                   return;
                 }
               }}
-              onPaste={(e) => { e.preventDefault(); alert('チート防止: コピペ禁止'); }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pasted = e.clipboardData ? e.clipboardData.getData('text') : '';
+                if (handleCheatDetected) handleCheatDetected(pasted || 'PASTE_ATTEMPT');
+              }}
               onDrop={(e) => e.preventDefault()}
               className={`w-full bg-black/80 border-2 rounded-2xl py-3 px-4 text-center text-2xl font-mono mobile-input placeholder:text-slate-700 transition-all shadow-inner ${inputBorderColor}`}
             />
+            {answerStatus === 'incorrect' && turnRewardDetail?.isCheatFailed && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <div className="text-rose-300 font-black text-xl md:text-2xl font-mono stamp-anim bg-black/95 px-6 py-3 rounded-2xl backdrop-blur-md border-2 border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.9)] flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-xs text-rose-400 font-bold tracking-widest uppercase">
+                    <span>🚨</span>
+                    <span>CHEAT DETECTED</span>
+                    <span>🚨</span>
+                  </div>
+                  <div className="text-base font-black text-white mt-0.5">
+                    一括入力検知（不正解）
+                  </div>
+                </div>
+              </div>
+            )}
             {answerStatus === 'correct' && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 {turnRewardDetail?.justMastered ? (
@@ -16904,6 +16976,9 @@ const ReviewScreen = ({
   setInputVal,
   inputRef,
   maskedHint,
+  showCheatModal,
+  setShowCheatModal,
+  handleCheatDetected,
   handleSubmitReview,
   setScreen
 }) => {
@@ -16931,6 +17006,30 @@ const ReviewScreen = ({
     <div className="max-w-md mx-auto p-4 flex flex-col min-h-screen justify-between pb-6 relative animate-fadeIn">
       {toastNotice && answerStatus === 'correct' && (
         <ToastNotice message={toastNotice} topClass="top-20" />
+      )}
+
+      {/* 🚨 CHEAT DETECTED 大型アラートモーダル 🚨 */}
+      {showCheatModal && (
+        <div className="fixed inset-0 bg-red-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center animate-shake">
+          <div className="text-6xl mb-3 animate-bounce">🚨</div>
+          <div className="text-2xl sm:text-4xl font-black text-rose-400 tracking-wider font-mono border-2 border-rose-500 bg-black/80 px-6 py-2.5 rounded-2xl shadow-[0_0_50px_rgba(244,63,94,0.9)] animate-pulse">
+            CHEAT 検出！
+          </div>
+          <div className="mt-4 text-base sm:text-lg font-black text-white max-w-xs leading-relaxed">
+            1回の操作で複数文字の入力（予測変換・サジェスト・コピペ等）が検知されました！
+          </div>
+          <div className="mt-2 text-xs text-rose-300 font-mono bg-rose-900/60 border border-rose-600 px-4 py-2 rounded-xl">
+            ⚠️ 復習練習のため、1文字ずつ入力してください
+          </div>
+          <div className="mt-6 w-full max-w-xs">
+            <button
+              onClick={() => setShowCheatModal(false)}
+              className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 text-white font-black py-3 px-6 rounded-2xl shadow-[0_0_20px_rgba(225,29,72,0.6)] border border-rose-400 text-sm tracking-widest uppercase font-mono transition-all"
+            >
+              閉じる（再挑戦）
+            </button>
+          </div>
+        </div>
       )}
 
       <div>
@@ -17022,11 +17121,35 @@ const ReviewScreen = ({
               disabled={answerStatus === 'correct'}
               placeholder="Type here..."
               value={inputVal}
+              onBeforeInput={(e) => {
+                if (answerStatus !== null && answerStatus !== 'incorrect') return;
+                const insertData = e.data || '';
+                const inputType = e.inputType || '';
+                if (insertData.length >= 2 || inputType === 'insertReplacementText' || inputType === 'insertFromPaste') {
+                  e.preventDefault();
+                  const detectedVal = (inputVal || '') + insertData;
+                  if (handleCheatDetected) handleCheatDetected(detectedVal);
+                }
+              }}
               onChange={(e) => {
-                let val = e.target.value;
-                val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-                val = val.replace(/　/g, ' ');
-                setInputVal(val);
+                const rawVal = e.target.value;
+                const prevVal = inputVal || '';
+                const nativeEvent = e.nativeEvent;
+
+                let normalizedVal = rawVal.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                normalizedVal = normalizedVal.replace(/　/g, ' ');
+
+                const diff = normalizedVal.length - prevVal.length;
+                const nativeDataLen = nativeEvent?.data ? nativeEvent.data.length : 0;
+                const inputType = nativeEvent?.inputType || '';
+                const isReplacement = inputType === 'insertReplacementText' || inputType === 'insertFromPaste';
+
+                if ((diff >= 2 || nativeDataLen >= 2 || isReplacement) && (answerStatus === null || answerStatus === 'incorrect')) {
+                  if (handleCheatDetected) handleCheatDetected(normalizedVal);
+                  return;
+                }
+
+                setInputVal(normalizedVal);
                 if (answerStatus === 'incorrect') setAnswerStatus(null);
               }}
               onKeyDown={(e) => {
@@ -17034,7 +17157,11 @@ const ReviewScreen = ({
                   return;
                 }
               }}
-              onPaste={(e) => { e.preventDefault(); alert('チート防止: コピペ禁止'); }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pasted = e.clipboardData ? e.clipboardData.getData('text') : '';
+                if (handleCheatDetected) handleCheatDetected(pasted || 'PASTE_ATTEMPT');
+              }}
               onDrop={(e) => e.preventDefault()}
               className={`w-full bg-black/80 border-2 rounded-2xl py-3 px-4 text-center text-2xl font-mono mobile-input placeholder:text-slate-700 transition-all shadow-inner ${inputBorderColor}`}
             />
@@ -18660,6 +18787,7 @@ function App() {
   const [shieldUsedThisTurn, setShieldUsedThisTurn] = useState(false);
   const [maxEndlessCombo, setMaxEndlessCombo] = useState(0);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showCheatModal, setShowCheatModal] = useState(false);
 
   const [questionStartTime, setQuestionStartTime] = useState(0);
   const [isSpeedBonus, setIsSpeedBonus] = useState(false);
@@ -18965,6 +19093,7 @@ function App() {
     setShieldUsedThisTurn(false);
     setMaxEndlessCombo(0);
     setShowQuitModal(false);
+    setShowCheatModal(false);
     setRecentAnsweredWordIds([]);
     setCheatAlertMsg('');
     setToastNotice(null);
@@ -19007,6 +19136,7 @@ function App() {
     setAnswerStatus(null);
     setIsBossQuestion(isBoss);
     setShowBossIntro(isBoss);
+    setShowCheatModal(false);
     setCheatAlertMsg('');
     setEarnedGoldThisTurn(0);
     setShieldUsedThisTurn(false);
@@ -19019,6 +19149,65 @@ function App() {
     }
     setQuestionStartTime(Date.now() + (isBoss ? 1600 : 0));
   }, [currentIndex, isEndlessMode, quizList, words, selectedLevel, sessionQuestionCount]);
+
+  // チート検知（1回の操作で複数文字の入力・予測変換タップ等の検知）
+  const handleCheatDetected = useCallback((detectedInput) => {
+    if (answerStatus !== null) return;
+    const currentWord = quizList[currentIndex];
+    if (!currentWord) return;
+
+    setShowCheatModal(true);
+    setCheatAlertMsg('🚨 CHEAT 検出: 1回の操作で複数文字の入力を検知（不正解）');
+
+    const trimmedInput = (detectedInput || '').trim();
+    setInputVal(trimmedInput);
+
+    // 不正解ペナルティ処理
+    setCurrentSessionCombo(0);
+    setEarnedGoldThisTurn(0);
+    setTurnRewardDetail({ earnedSP: 0, rawSP: 0, isCheatFailed: true });
+
+    SoundFX.vibrate([200, 100, 200, 100, 300]);
+    SoundFX.playWrong();
+    setAnswerStatus('incorrect');
+
+    // 単語統計データの更新 (不正解として記録、ストリーク0リセット)
+    setStats(prev => {
+      const st = prev[currentWord.id] || { tested: 0, wrong: 0, streak: 0, reviewStep: 0, nextReviewDate: null };
+      return {
+        ...prev,
+        [currentWord.id]: {
+          tested: (st.tested || 0) + 1,
+          wrong: (st.wrong || 0) + 1,
+          streak: 0,
+          reviewStep: 0,
+          nextReviewDate: null,
+          lastDate: new Date().toISOString()
+        }
+      };
+    });
+
+    // セッション履歴に不正解として追加
+    setSessionResults(prev => [...prev, {
+      word: currentWord,
+      userInput: trimmedInput,
+      isCorrect: false,
+      isBoss: isBossQuestion,
+      justMastered: false,
+      earnedSP: 0,
+      isCheatDetected: true
+    }]);
+  }, [answerStatus, currentIndex, isBossQuestion, quizList]);
+
+  // 復習時のチート検知ハンドラ
+  const handleReviewCheatDetected = useCallback((detectedInput) => {
+    if (answerStatus !== null) return;
+    setShowCheatModal(true);
+    setInputVal((detectedInput || '').trim());
+    SoundFX.vibrate([200, 100, 200, 100, 300]);
+    SoundFX.playWrong();
+    setAnswerStatus('incorrect');
+  }, [answerStatus]);
 
   // 解答提出
   const handleSubmitAnswer = (e) => {
@@ -19421,6 +19610,9 @@ function App() {
                 cheatAlertMsg={cheatAlertMsg}
                 showQuitModal={showQuitModal}
                 setShowQuitModal={setShowQuitModal}
+                showCheatModal={showCheatModal}
+                setShowCheatModal={setShowCheatModal}
+                handleCheatDetected={handleCheatDetected}
                 handleSubmitAnswer={handleSubmitAnswer}
                 handleNextQuestion={handleNextQuestion}
                 getFeverPhase={getFeverPhase}
@@ -19442,6 +19634,9 @@ function App() {
                 setInputVal={setInputVal}
                 inputRef={inputRef}
                 maskedHint={maskedHint}
+                showCheatModal={showCheatModal}
+                setShowCheatModal={setShowCheatModal}
+                handleCheatDetected={handleReviewCheatDetected}
                 handleSubmitReview={handleSubmitReview}
                 setScreen={setScreen}
               />
