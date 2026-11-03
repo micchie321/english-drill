@@ -16528,7 +16528,7 @@ const MenuScreen = ({
 
         {/* コピーライト & バージョン表記 */}
         <div className="mt-1.5 text-center text-[9px] font-mono text-slate-500/80 tracking-wider">
-          &copy; もずずんゲームス &bull; v1.1.0
+          &copy; もずずんゲームス &bull; v1.2.0
         </div>
       </div>
     </div>
@@ -16570,6 +16570,14 @@ const QuizScreen = ({
   if (!currentWord) return null;
 
   const nextBtnRef = useRef(null);
+  const lastValRef = useRef('');
+  const keystrokeCountRef = useRef(0);
+
+  // 出題切り替え時に打鍵カウント・同期文字列をリセット
+  useEffect(() => {
+    lastValRef.current = '';
+    keystrokeCountRef.current = 0;
+  }, [currentIndex]);
 
   // 不正解時にEnterキーで即座に次へ進めるグローバルリスナー & ボタンフォーカス
   useEffect(() => {
@@ -16762,6 +16770,16 @@ const QuizScreen = ({
           onSubmit={(e) => {
             e.preventDefault();
             if (answerStatus === null) {
+              const trimmed = (inputVal || '').trim();
+              // 【スマホ予測変換すり抜け防止の最終防壁】
+              // 3文字以上の英単語で、打鍵回数（ストローク数）が文字数に対して極端に少ない場合（予測変換による一括適用）
+              const minExpectedStrokes = Math.max(2, Math.floor(trimmed.length * 0.75));
+              if (trimmed.length >= 3 && keystrokeCountRef.current < minExpectedStrokes) {
+                if (handleCheatDetected) {
+                  handleCheatDetected(trimmed);
+                  return;
+                }
+              }
               handleSubmitAnswer(e);
             } else if (answerStatus === 'incorrect') {
               handleNextQuestion();
@@ -16792,21 +16810,35 @@ const QuizScreen = ({
               disabled={answerStatus !== null}
               placeholder="Type here..."
               value={inputVal}
+              onCompositionEnd={(e) => {
+                if (answerStatus !== null) return;
+                const compData = e.data || '';
+                // スマホの予測変換確定で2文字以上の単語が挿入された場合
+                if (compData.length >= 2) {
+                  if (handleCheatDetected) handleCheatDetected(e.target.value);
+                }
+              }}
               onBeforeInput={(e) => {
                 if (answerStatus !== null) return;
                 const insertData = e.data || '';
                 const inputType = e.inputType || '';
-                // 1回の操作で2文字以上の入力またはサジェスト置換を事前検知
-                if (insertData.length >= 2 || inputType === 'insertReplacementText' || inputType === 'insertFromPaste') {
+                // 複数文字挿入、または予測変換/置換/合成入力タイプを事前検知
+                const isSuspicious = 
+                  insertData.length >= 2 || 
+                  inputType === 'insertReplacementText' || 
+                  inputType === 'insertFromPaste' ||
+                  inputType === 'insertFromComposition';
+
+                if (isSuspicious) {
                   e.preventDefault();
-                  const detectedVal = (inputVal || '') + insertData;
+                  const detectedVal = (lastValRef.current || '') + insertData;
                   if (handleCheatDetected) handleCheatDetected(detectedVal);
                 }
               }}
               onChange={(e) => {
                 if (answerStatus !== null) return;
                 const rawVal = e.target.value;
-                const prevVal = inputVal || '';
+                const prevVal = lastValRef.current || '';
                 const nativeEvent = e.nativeEvent;
 
                 let normalizedVal = rawVal.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
@@ -16815,14 +16847,24 @@ const QuizScreen = ({
                 const diff = normalizedVal.length - prevVal.length;
                 const nativeDataLen = nativeEvent?.data ? nativeEvent.data.length : 0;
                 const inputType = nativeEvent?.inputType || '';
-                const isReplacement = inputType === 'insertReplacementText' || inputType === 'insertFromPaste';
+                const isSuspiciousType = 
+                  inputType === 'insertReplacementText' || 
+                  inputType === 'insertFromPaste' || 
+                  inputType === 'insertFromComposition';
 
                 // 1回の操作で2文字以上増加、またはサジェスト置換 => チート検出＆即時不正解！
-                if (diff >= 2 || nativeDataLen >= 2 || isReplacement) {
+                if (diff >= 2 || nativeDataLen >= 2 || isSuspiciousType) {
+                  lastValRef.current = normalizedVal;
                   if (handleCheatDetected) handleCheatDetected(normalizedVal);
                   return;
                 }
 
+                // 正常な1文字タイピング時のみストローク数を加算
+                if (diff === 1) {
+                  keystrokeCountRef.current += 1;
+                }
+
+                lastValRef.current = normalizedVal;
                 setInputVal(normalizedVal);
               }}
               onKeyDown={(e) => {
@@ -16986,6 +17028,13 @@ const ReviewScreen = ({
   if (!currentWord) return null;
 
   const maxSteps = getReviewStepsCount(currentWord.word);
+  const lastValRef = useRef('');
+  const keystrokeCountRef = useRef(0);
+
+  useEffect(() => {
+    lastValRef.current = '';
+    keystrokeCountRef.current = 0;
+  }, [reviewStep, reviewIndex]);
 
   useEffect(() => {
     if (answerStatus === null) {
@@ -17095,7 +17144,22 @@ const ReviewScreen = ({
         </div>
 
         <form
-          onSubmit={handleSubmitReview}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (answerStatus === null) {
+              const trimmed = (inputVal || '').trim();
+              const minExpectedStrokes = Math.max(2, Math.floor(trimmed.length * 0.75));
+              if (trimmed.length >= 3 && keystrokeCountRef.current < minExpectedStrokes) {
+                if (handleCheatDetected) {
+                  handleCheatDetected(trimmed);
+                  return;
+                }
+              }
+              handleSubmitReview(e);
+            } else if (answerStatus === 'incorrect') {
+              handleSubmitReview(e);
+            }
+          }}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -17121,19 +17185,32 @@ const ReviewScreen = ({
               disabled={answerStatus === 'correct'}
               placeholder="Type here..."
               value={inputVal}
+              onCompositionEnd={(e) => {
+                if (answerStatus !== null && answerStatus !== 'incorrect') return;
+                const compData = e.data || '';
+                if (compData.length >= 2) {
+                  if (handleCheatDetected) handleCheatDetected(e.target.value);
+                }
+              }}
               onBeforeInput={(e) => {
                 if (answerStatus !== null && answerStatus !== 'incorrect') return;
                 const insertData = e.data || '';
                 const inputType = e.inputType || '';
-                if (insertData.length >= 2 || inputType === 'insertReplacementText' || inputType === 'insertFromPaste') {
+                const isSuspicious = 
+                  insertData.length >= 2 || 
+                  inputType === 'insertReplacementText' || 
+                  inputType === 'insertFromPaste' ||
+                  inputType === 'insertFromComposition';
+
+                if (isSuspicious) {
                   e.preventDefault();
-                  const detectedVal = (inputVal || '') + insertData;
+                  const detectedVal = (lastValRef.current || '') + insertData;
                   if (handleCheatDetected) handleCheatDetected(detectedVal);
                 }
               }}
               onChange={(e) => {
                 const rawVal = e.target.value;
-                const prevVal = inputVal || '';
+                const prevVal = lastValRef.current || '';
                 const nativeEvent = e.nativeEvent;
 
                 let normalizedVal = rawVal.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
@@ -17142,13 +17219,22 @@ const ReviewScreen = ({
                 const diff = normalizedVal.length - prevVal.length;
                 const nativeDataLen = nativeEvent?.data ? nativeEvent.data.length : 0;
                 const inputType = nativeEvent?.inputType || '';
-                const isReplacement = inputType === 'insertReplacementText' || inputType === 'insertFromPaste';
+                const isSuspiciousType = 
+                  inputType === 'insertReplacementText' || 
+                  inputType === 'insertFromPaste' || 
+                  inputType === 'insertFromComposition';
 
-                if ((diff >= 2 || nativeDataLen >= 2 || isReplacement) && (answerStatus === null || answerStatus === 'incorrect')) {
+                if ((diff >= 2 || nativeDataLen >= 2 || isSuspiciousType) && (answerStatus === null || answerStatus === 'incorrect')) {
+                  lastValRef.current = normalizedVal;
                   if (handleCheatDetected) handleCheatDetected(normalizedVal);
                   return;
                 }
 
+                if (diff === 1) {
+                  keystrokeCountRef.current += 1;
+                }
+
+                lastValRef.current = normalizedVal;
                 setInputVal(normalizedVal);
                 if (answerStatus === 'incorrect') setAnswerStatus(null);
               }}
