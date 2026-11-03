@@ -76,7 +76,7 @@ body {
 }
 
 input:focus { outline: none; }
-.mobile-input { font-size: 1.35rem !important; letter-spacing: 0.1em; user-select: none; -webkit-user-select: none; }
+.mobile-input { font-size: 1.35rem !important; letter-spacing: 0.1em; user-select: none; -webkit-user-select: none; ime-mode: disabled; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
 
@@ -15818,7 +15818,10 @@ const getAnswerCandidates = (rawWord) => {
  */
 const checkAnswerCorrectness = (userInput, rawWord) => {
   if (!userInput || !rawWord) return false;
-  const cleanInput = String(userInput).trim().toLowerCase();
+  let cleanInput = String(userInput).trim().toLowerCase();
+  // 全角英数字を半角に正規化し、全角スペースも半角へ変換
+  cleanInput = cleanInput.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+  cleanInput = cleanInput.replace(/　/g, ' ');
   const candidates = getAnswerCandidates(rawWord);
   return candidates.some(c => c.toLowerCase() === cleanInput);
 };
@@ -16739,21 +16742,21 @@ const QuizScreen = ({
           }}
           autoComplete="off"
           autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck="false"
+          autoCapitalize="off"
+          spellCheck={false}
           className="mt-3 space-y-2 relative"
         >
           <div className="relative z-10">
             <input
               ref={inputRef}
               type="text"
-              name={`spell_${currentWord?.id || 'answer'}`}
-              id={`spell_input_${currentWord?.id || 'answer'}`}
-              autoComplete="off"
+              name={`spell_${currentWord?.id || 'ans'}_${currentIndex}`}
+              id={`spell_input_${currentWord?.id || 'ans'}_${currentIndex}`}
+              autoComplete="one-time-code"
               autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck="false"
-              inputMode="search"
+              autoCapitalize="off"
+              spellCheck={false}
+              inputMode="text"
               enterKeyHint="done"
               data-form-type="other"
               data-lpignore="true"
@@ -16762,7 +16765,17 @@ const QuizScreen = ({
               disabled={answerStatus !== null}
               placeholder="Type here..."
               value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
+              onChange={(e) => {
+                let val = e.target.value;
+                val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                val = val.replace(/　/g, ' ');
+                setInputVal(val);
+              }}
+              onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing || e.keyCode === 229) {
+                  return;
+                }
+              }}
               onPaste={(e) => { e.preventDefault(); alert('チート防止: コピペ禁止'); }}
               onDrop={(e) => e.preventDefault()}
               className={`w-full bg-black/80 border-2 rounded-2xl py-3 px-4 text-center text-2xl font-mono mobile-input placeholder:text-slate-700 transition-all shadow-inner ${inputBorderColor}`}
@@ -16986,21 +16999,21 @@ const ReviewScreen = ({
           onSubmit={handleSubmitReview}
           autoComplete="off"
           autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck="false"
+          autoCapitalize="off"
+          spellCheck={false}
           className="mt-4 space-y-2"
         >
           <div className="relative">
             <input
               ref={inputRef}
               type="text"
-              name={`review_${currentWord?.id || 'answer'}`}
-              id={`review_input_${currentWord?.id || 'answer'}`}
-              autoComplete="off"
+              name={`review_${currentWord?.id || 'ans'}_${reviewIndex}_${reviewStep}`}
+              id={`review_input_${currentWord?.id || 'ans'}_${reviewIndex}_${reviewStep}`}
+              autoComplete="one-time-code"
               autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck="false"
-              inputMode="search"
+              autoCapitalize="off"
+              spellCheck={false}
+              inputMode="text"
               enterKeyHint="done"
               data-form-type="other"
               data-lpignore="true"
@@ -17010,8 +17023,16 @@ const ReviewScreen = ({
               placeholder="Type here..."
               value={inputVal}
               onChange={(e) => {
-                setInputVal(e.target.value);
+                let val = e.target.value;
+                val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                val = val.replace(/　/g, ' ');
+                setInputVal(val);
                 if (answerStatus === 'incorrect') setAnswerStatus(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing || e.keyCode === 229) {
+                  return;
+                }
               }}
               onPaste={(e) => { e.preventDefault(); alert('チート防止: コピペ禁止'); }}
               onDrop={(e) => e.preventDefault()}
@@ -18339,18 +18360,25 @@ const BackupScreen = ({
   setBackupStatus,
   setScreen
 }) => {
+  const [pasteText, setPasteText] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const getBackupJson = () => {
+    const fullBackup = {
+      words,
+      levels,
+      stats,
+      gameData,
+      dailyLogs,
+      sessionLogs,
+      backupDate: new Date().toISOString()
+    };
+    return JSON.stringify(fullBackup, null, 2);
+  };
+
   const handleExportAll = () => {
     try {
-      const fullBackup = {
-        words,
-        levels,
-        stats,
-        gameData,
-        dailyLogs,
-        sessionLogs,
-        backupDate: new Date().toISOString()
-      };
-      const jsonStr = JSON.stringify(fullBackup, null, 2);
+      const jsonStr = getBackupJson();
       const blob = new Blob([jsonStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -18358,10 +18386,41 @@ const BackupScreen = ({
       a.download = `spell_master_backup_${getLocalDateStr()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      setBackupStatus('✅ ダウンロードしました');
+      setBackupStatus('✅ ダウンロードを開始しました');
     } catch (e) {
       setBackupStatus('❌ 失敗: ' + e.message);
     }
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      const jsonStr = getBackupJson();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(jsonStr);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = jsonStr;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setBackupStatus('📋 クリップボードにコピーしました！メモ帳等に保存できます');
+      setTimeout(() => setCopied(false), 3000);
+    } catch (e) {
+      setBackupStatus('❌ コピー失敗: ' + e.message);
+    }
+  };
+
+  const applyRestoredData = (data) => {
+    if (data.words) setWords(data.words);
+    if (data.levels) setLevels(data.levels);
+    if (data.stats) setStats(data.stats);
+    if (data.gameData) setGameData(data.gameData);
+    if (data.dailyLogs) setDailyLogs(data.dailyLogs);
+    if (data.sessionLogs) setSessionLogs(data.sessionLogs);
+    setBackupStatus('✅ データを正常に復元しました！');
   };
 
   const handleImportBackup = (e) => {
@@ -18371,18 +18430,23 @@ const BackupScreen = ({
     reader.onload = (evt) => {
       try {
         const data = JSON.parse(evt.target.result);
-        if (data.words) setWords(data.words);
-        if (data.levels) setLevels(data.levels);
-        if (data.stats) setStats(data.stats);
-        if (data.gameData) setGameData(data.gameData);
-        if (data.dailyLogs) setDailyLogs(data.dailyLogs);
-        if (data.sessionLogs) setSessionLogs(data.sessionLogs);
-        setBackupStatus('✅ 復元しました');
+        applyRestoredData(data);
       } catch (err) {
-        setBackupStatus('❌ 復元エラー');
+        setBackupStatus('❌ ファイルの復元に失敗しました（JSON形式が無効です）');
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleRestoreFromText = () => {
+    if (!pasteText.trim()) return;
+    try {
+      const data = JSON.parse(pasteText.trim());
+      applyRestoredData(data);
+      setPasteText('');
+    } catch (err) {
+      setBackupStatus('❌ 貼り付けテキストの復元に失敗しました（JSON形式が無効です）');
+    }
   };
 
   return (
@@ -18400,23 +18464,61 @@ const BackupScreen = ({
 
         <div className="space-y-4 text-left">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-            <h3 className="text-sm font-bold text-white mb-1 font-mono">1. バックアップ書き出し</h3>
-            <button
-              onClick={handleExportAll}
-              className="w-full bg-indigo-600 text-white font-mono font-bold py-2.5 rounded-xl text-xs"
-            >
-              💾 ダウンロード (.json)
-            </button>
+            <h3 className="text-sm font-bold text-white mb-2 font-mono">1. バックアップ書き出し</h3>
+            <div className="space-y-2">
+              <button
+                onClick={handleCopyToClipboard}
+                className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <span>{copied ? '✅ コピー完了！' : '📋 クリップボードにコピー'}</span>
+              </button>
+              <button
+                onClick={handleExportAll}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <span>💾 JSONダウンロード</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 font-mono mt-2">
+              ※ スマホでは「クリップボードにコピー」してメモ帳やLINEに控える方法が最も確実です。
+            </p>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-            <h3 className="text-sm font-bold text-white mb-1 font-mono">2. 復元</h3>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportBackup}
-              className="w-full text-xs text-slate-400 bg-cyan-500 rounded"
-            />
+            <h3 className="text-sm font-bold text-white mb-2 font-mono">2. 復元</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  方法A: テキスト貼り付けで復元
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="バックアップのJSONテキストをここに貼り付け"
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  className="w-full bg-black/60 border border-slate-700 rounded-xl p-2.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500"
+                />
+                <button
+                  onClick={handleRestoreFromText}
+                  disabled={!pasteText.trim()}
+                  className="w-full mt-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-mono font-bold py-2 rounded-xl text-xs transition-colors"
+                >
+                  📥 貼り付けたデータから復元
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800">
+                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  方法B: ファイルから復元
+                </label>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportBackup}
+                  className="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
 
           {backupStatus && (
