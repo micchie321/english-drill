@@ -24,41 +24,32 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Build Web Bundle (Ensure Latest index.html)
-        run: |
-          python build.py --no-bump
-
       - name: Accept Android SDK Licenses
         run: |
           yes | sdkmanager --licenses || true
 
       - name: Prepare Web Assets & Generate Capacitor Project
         run: |
-          # 1. 公開用 www フォルダを作成してアセットをコピー
+          # 1. 公開用 www フォルダを作成
           mkdir -p www
-          # APK用のアセットをコピー (APKではSWキャッシュトラブルを防ぐため sw.js は同梱しない)
-          cp -r index.html manifest.json icon-192.png icon-512.png css src *.csv www/ 2>/dev/null || true
-          rm -f www/sw.js
           
-          # 2. Capacitor 初期化
+          # 2. Webアセットをコピー (※APK内での二重キャッシュ事故を防ぐため sw.js は意図的に除外)
+          cp index.html manifest.json icon-192.png icon-512.png www/ 2>/dev/null || true
+          
+          # 3. Capacitor 初期化
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Spell Blaster" "com.spellblaster.app" --web-dir "www"
           npx cap add android
           npx cap copy android
 
-          # 3. Kotlin 重複クラスエラー（Duplicate class）対策を追記
+          # 4. Kotlin 重複クラスエラー（Duplicate class）対策を追記
           echo "subprojects { configurations.all { resolutionStrategy.eachDependency { details -> if (details.requested.group == 'org.jetbrains.kotlin' && (details.requested.name == 'kotlin-stdlib-jdk7' || details.requested.name == 'kotlin-stdlib-jdk8')) { details.useVersion '1.8.22' } } } }" >> android/build.gradle
           
-          # 4. バージョン番号（versionCode）を自動インクリメント（上書き更新に必須）
+          # 5. バージョン番号（versionCode）を自動インクリメント（上書き更新に必須）
           sed -i 's/versionCode 1/versionCode ${{ github.run_number }}/g' android/app/build.gradle
 
-          # 5. アプリアイコンをネイティブ側に適用
+          # 6. アプリアイコンをネイティブ側に適用
           if [ -f "icon-512.png" ]; then
             mkdir -p android/app/src/main/res/mipmap-xxxhdpi
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
