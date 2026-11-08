@@ -48,20 +48,14 @@ jobs:
           # 5. バージョン番号（versionCode）を自動インクリメント（上書き更新に必須）
           sed -i 's/versionCode 1/versionCode ${{ github.run_number }}/g' android/app/build.gradle
 
-          # 6. MainActivity に WebView キャッシュ自動クリアを追加 (学習データ localStorage は保護)
-          MAIN_ACTIVITY="android/app/src/main/java/com/spellblaster/app/MainActivity.java"
-          if [ -f "$MAIN_ACTIVITY" ]; then
-            sed -i '/public class MainActivity/a \    @Override\n    public void onResume() {\n        super.onResume();\n        if (getBridge() != null && getBridge().getWebView() != null) {\n            getBridge().getWebView().clearCache(true);\n        }\n    }' "$MAIN_ACTIVITY"
-          fi
-
-          # 7. アプリアイコンをネイティブ側に適用
+          # 6. アプリアイコンをネイティブ側に適用
           if [ -f "icon-512.png" ]; then
             mkdir -p android/app/src/main/res/mipmap-xxxhdpi
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
             cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
           fi
 
-          # 8. アセットを Android 側に同期
+          # 7. アセットを Android 側に同期
           npx cap copy android
 
       - name: Build Standalone Release APK
