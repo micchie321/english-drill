@@ -9,15 +9,47 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <meta name="theme-color" content="#06b6d4">
   
-  <!-- PWA Service Worker 登録 -->
+  <!-- PWA Service Worker 制御（Web版はPWA有効化、APK/Capacitor内では二重キャッシュを防止） -->
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./sw.js').catch(function(e) {
-          console.warn('SW registration failed:', e);
-        });
-      });
-    }
+    (function() {
+      var isNativeApp = !!(
+        window.Capacitor ||
+        window.Android ||
+        window.location.protocol === 'capacitor:' ||
+        window.location.protocol === 'file:' ||
+        (window.location.hostname === 'localhost' && window.location.port === '' && navigator.userAgent.indexOf('Android') !== -1)
+      );
+
+      if (isNativeApp) {
+        // ネイティブAPK（アプリ）実行時:
+        // アプリ内アセットを常に直接読み込むため Service Worker は登録せず、
+        // 過去の古いキャッシュ（CacheStorage）が残っていれば自動クリア（※学習データ localStorage は保護）
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) {
+              regs[i].unregister();
+            }
+          }).catch(function() {});
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (var i = 0; i < names.length; i++) {
+              caches.delete(names[i]);
+            }
+          }).catch(function() {});
+        }
+      } else {
+        // Webブラウザ（GitHub Pages 等）実行時:
+        // オフライン対応 PWA として Service Worker を登録
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').catch(function(e) {
+              console.warn('SW registration failed:', e);
+            });
+          });
+        }
+      }
+    })();
   </script>
   
   <!-- エラー可視化トラップ（構文エラーや実行時エラーを画面上に表示） -->
@@ -189,9 +221,9 @@ input:focus { outline: none; }
  * 自動生成されたバージョン情報ファイル (build.py により自動更新)
  */
 const APP_VERSION = 'v1.2.1';
-const BUILD_NUMBER = 3;
-const BUILD_DATE = '2026-11-07 22:43';
-const FULL_VERSION_STRING = 'v1.2.1 (Build 3)';
+const BUILD_NUMBER = 4;
+const BUILD_DATE = '2026-11-08 13:53';
+const FULL_VERSION_STRING = 'v1.2.1 (Build 4)';
 
     // ===== src/constants/vocabulary.js =====
 const DEFAULT_VOCABULARY = [
