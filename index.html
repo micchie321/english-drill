@@ -184,6 +184,15 @@ input:focus { outline: none; }
     // React hooks shortcut
     const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
+    // ===== src/constants/version.js =====
+/**
+ * 自動生成されたバージョン情報ファイル (build.py により自動更新)
+ */
+const APP_VERSION = 'v1.2.1';
+const BUILD_NUMBER = 3;
+const BUILD_DATE = '2026-11-07 22:43';
+const FULL_VERSION_STRING = 'v1.2.1 (Build 3)';
+
     // ===== src/constants/vocabulary.js =====
 const DEFAULT_VOCABULARY = [
   {
@@ -1877,7 +1886,7 @@ const DEFAULT_VOCABULARY = [
   {
     "id": "t1_212",
     "level": "Level 1",
-    "word": "ΟΚ/Ο.Κ.",
+    "word": "OK/O.K.",
     "meaning": "よろしい",
     "pos": "",
     "example": ""
@@ -3053,7 +3062,7 @@ const DEFAULT_VOCABULARY = [
   {
     "id": "t1_359",
     "level": "Level 1",
-    "word": "p.m./Р.М.",
+    "word": "p.m./P.M.",
     "meaning": "午後",
     "pos": "",
     "example": ""
@@ -4613,7 +4622,7 @@ const DEFAULT_VOCABULARY = [
   {
     "id": "t2_154",
     "level": "Level 2",
-    "word": "a.m.Α.Μ.",
+    "word": "a.m./A.M.",
     "meaning": "午前",
     "pos": "",
     "example": ""
@@ -5885,7 +5894,7 @@ const DEFAULT_VOCABULARY = [
   {
     "id": "t2_313",
     "level": "Level 2",
-    "word": "ΑΙ",
+    "word": "AI",
     "meaning": "人工知能",
     "pos": "",
     "example": ""
@@ -14660,7 +14669,14 @@ const BADGES_CONFIG = [
   { id: 'special_upgrade_max', title: '【完全武装】オーバークロック・ゴッド', category: 'upgrade_max', req: 1, icon: '🦾', desc: 'ショップのいずれかのスキルを最大Lvまで強化した' },
   { id: 'special_upgrade_total_25', title: '【重装騎兵】アーマード・スペラー', category: 'upgrade_total', req: 25, icon: '🛡️', desc: 'スキルの合計アップグレード回数が25回に到達' },
   { id: 'special_upgrade_total_60', title: '【神話要塞】アルティメット・サイボーグ', category: 'upgrade_total', req: 60, icon: '🤖', desc: 'スキルの合計アップグレード回数が60回に到達' },
-  { id: 'special_transcendence', title: '【量子覚醒】クアンタム・イノベーター', category: 'transcendence', req: 1, icon: '💠', desc: 'QUANTUM GOD-COREを解放した' }
+  { id: 'special_transcendence', title: '【量子覚醒】クアンタム・イノベーター', category: 'transcendence', req: 1, icon: '💠', desc: 'QUANTUM GOD-COREを解放した' },
+
+  // フィーバーモード（サドンデス）実績
+  { id: 'fever_5', title: '🔥 フィーバー・イグニッション', category: 'fever', req: 5, icon: '🔥', desc: 'フィーバーモードで5問連続正解を達成（通常等倍到達！）' },
+  { id: 'fever_15', title: '⚡ サドンデス・ブレイカー', category: 'fever', req: 15, icon: '⚡', desc: 'フィーバーモードで15問連続正解を突破' },
+  { id: 'fever_30', title: '💥 ハイパー・フィーバー・マスター', category: 'fever', req: 30, icon: '💥', desc: 'フィーバーモードで30問連続正解を達成' },
+  { id: 'fever_50', title: '🪐 【焦熱領域】インフェルノ・オーバーロード', category: 'fever', req: 50, icon: '🪐', desc: 'フィーバーモードで50問連続正解を達成（超次元領域）' },
+  { id: 'fever_100', title: '👑 【神域不落】サドンデス・フェニックス・ゴッド', category: 'fever', req: 100, icon: '👑', desc: '偉業！フィーバーモードで100問連続正解の奇跡を樹立' }
 ];
 
     // ===== src/constants/upgrades.js =====
@@ -14799,6 +14815,31 @@ const UPGRADES_CONFIG = [
     maxLevel: 20
   },
   {
+    key: 'feverAcceleratorLv',
+    name: 'HYPER FEVER CORE',
+    subName: 'サドンデス倍率加速エンジン',
+    desc: (lv) => {
+      const l = lv || 0;
+      const lin = 0.03 + (l * 0.035);
+      const quad = 0.001 + (l * 0.004) + (Math.pow(l, 1.6) * 0.0006);
+      const m10 = (1.0 + 5 * lin + 25 * quad).toFixed(1);
+      const m20 = (1.0 + 15 * lin + 225 * quad).toFixed(1);
+      return `フィーバー専用: 5問正解以降の上昇カーブを爆発加速！(現在: 10問で${m10}倍、20問で${m20}倍)`;
+    },
+    icon: '⚡',
+    baseCost: 8000,
+    costMultiplier: 1.85,
+    maxLevel: 20,
+    getUnlockReq: (nextLv) => {
+      if (nextLv <= 2) return null; // Lv 1〜2: 初期解放
+      if (nextLv <= 5) return { reqCombo: 10, label: '10連勝' }; // Lv 3〜5
+      if (nextLv <= 9) return { reqCombo: 20, label: '20連勝' }; // Lv 6〜9
+      if (nextLv <= 13) return { reqCombo: 30, label: '30連勝' }; // Lv 10〜13
+      if (nextLv <= 17) return { reqCombo: 40, label: '40連勝' }; // Lv 14〜17
+      return { reqCombo: 50, label: '50連勝' }; // Lv 18〜20 (MAX購入には50連勝が必須)
+    }
+  },
+  {
     key: 'transcendenceCoreLv',
     name: 'QUANTUM GOD-CORE',
     subName: '量子神話アルティメット・コア',
@@ -14828,6 +14869,165 @@ const GIGA_CHEST_CONFIG = {
   name: 'GIGA GOD CHEST',
   icon: '🪐'
 };
+
+    // ===== src/constants/masteryShop.js =====
+/**
+ * MP (Mastery Point / マスターポイント) 専用ショップ設定
+ * 1800単語スケールに対応した超弩級秘宝 ＆ 10段階の神話称号ピラミッド
+ */
+const MASTERY_ITEMS_CONFIG = [
+  {
+    key: 'masteryAuraLv',
+    name: '👑 MASTERY EMPEROR AURA',
+    subName: '習得者の覇気・皇帝オーラ',
+    desc: (lv) => `画面に黄金オーラを放ち、全獲得SPを永続で+${((lv || 0) * 20)}%増幅！(現在: Lv.${lv || 0})`,
+    icon: '👑',
+    baseCost: 100,
+    costMultiplier: 1.85,
+    maxLevel: 10
+  },
+  {
+    key: 'cyberAlchemyLv',
+    name: '🎰 CYBER ALCHEMY MATRIX',
+    subName: '電脳錬金マトリクス',
+    desc: (lv) => `マスター単語正解時、獲得MP×${((lv || 0) * 1500).toLocaleString()} SPの純金ボーナスが直接噴出！`,
+    icon: '🎰',
+    baseCost: 300,
+    costMultiplier: 2.0,
+    maxLevel: 5
+  },
+  {
+    key: 'feverHeadstartLv',
+    name: '⚡ OMEGA FEVER IGNITION',
+    subName: 'オメガ・フィーバー急点火',
+    desc: (lv) => `フィーバー開始時、コンボ${(lv || 0) * 3}連勝(倍率${(1.0 + (lv || 0) * 0.8).toFixed(1)}x)から即スタート！(現在: Lv.${lv || 0})`,
+    icon: '⚡',
+    baseCost: 500,
+    costMultiplier: 2.1,
+    maxLevel: 5
+  },
+  {
+    key: 'aegisOfWisdom',
+    name: '🛡️ DIVINE AEGIS OF ATHENA',
+    subName: 'アテナの神盾',
+    desc: (owned) => owned ? 'シールド最大枠が【8個】に拡張＆毎朝ログイン時にシールド+2自動補給！' : 'シールド上限を8個に拡張 ＆ 毎朝ログイン時にシールド+2自動支給',
+    icon: '🛡️',
+    baseCost: 1200,
+    isOneTime: true
+  },
+
+  {
+    key: 'transcendentInsight',
+    name: '👁️ CHRONO BULLET TIME',
+    subName: 'クロノ・バレットタイム',
+    desc: (owned) => owned ? 'スピードボーナスの受付判定時間が【+1.0秒】延長！(3.5秒まで有効)' : 'スピードボーナスの受付判定時間を+1.0秒延長。余裕でクリティカル連発！',
+    icon: '👁️',
+    baseCost: 4000,
+    isOneTime: true
+  },
+  {
+    key: 'goldenCardTransformLv',
+    name: '💎 GOLDEN CARD AWAKENING',
+    subName: '黄金単語覚醒マトリクス',
+    desc: (lv) => `マスター単語出題時、${((lv || 0) * 10)}%の確率でカードが黄金化！正解でSP・MPが【3倍】獲得！`,
+    icon: '💎',
+    baseCost: 8000,
+    costMultiplier: 2.3,
+    maxLevel: 5
+  }
+];
+const MASTERY_TITLES_CONFIG = [
+  {
+    id: 'title_seeker',
+    title: '【語彙の探求者】',
+    sub: 'Lexicon Seeker',
+    desc: 'マスター単語の復習を重ね、知の深淵へ踏み出した証',
+    cost: 100,
+    badgeColor: 'from-cyan-500 to-blue-600',
+    icon: '📘'
+  },
+  {
+    id: 'title_polymath',
+    title: '【博覧強記の秀才】',
+    sub: 'Polymath Prodigy',
+    desc: '多くの英単語を完全に記憶し、縦横無尽に操る知者',
+    cost: 300,
+    badgeColor: 'from-emerald-400 to-teal-600',
+    icon: '🧠'
+  },
+  {
+    id: 'title_centurion',
+    title: '【百語制覇の英傑】',
+    sub: 'Centurion of Words',
+    desc: '100語以上のマスターを維持し、不落の語彙力を誇る猛者',
+    cost: 800,
+    badgeColor: 'from-amber-400 to-yellow-600',
+    icon: '⚔️'
+  },
+  {
+    id: 'title_sage',
+    title: '【不忘の賢者】',
+    sub: 'Sage of Total Recall',
+    desc: '忘却の波を幾度も退け、記憶をダイヤモンドに変えた者',
+    cost: 2000,
+    badgeColor: 'from-fuchsia-400 to-purple-600',
+    icon: '🔮'
+  },
+  {
+    id: 'title_conqueror',
+    title: '【千語掌握の覇王】',
+    sub: 'Conqueror of 1000 Lexicons',
+    desc: '1,000語を超える英単語を脳内に完全定着させた伝説の覇王',
+    cost: 5000,
+    badgeColor: 'from-amber-500 via-orange-500 to-yellow-400',
+    icon: '👑'
+  },
+  {
+    id: 'title_phoenix',
+    title: '【神速不落の不死鳥】',
+    sub: 'Phoenix of Sudden Death',
+    desc: 'フィーバーの業火を駆け抜け、完全記憶を証明した伝説',
+    cost: 12000,
+    badgeColor: 'from-rose-500 to-red-700',
+    icon: '🔥'
+  },
+  {
+    id: 'title_god',
+    title: '【全知全能の言霊神】',
+    sub: 'Omniscient Word Deity',
+    desc: '言語のすべてを掌握し、神の領域へと達した最高峰の称号',
+    cost: 30000,
+    badgeColor: 'from-purple-500 via-indigo-400 to-cyan-400',
+    icon: '🌌'
+  },
+  {
+    id: 'title_akashic',
+    title: '【星間記憶のアカシック・ルーラー】',
+    sub: 'Akashic Record Ruler',
+    desc: '宇宙の全言語記憶を統べる究極の知性。あらゆるスペルを一瞬で看破する',
+    cost: 75000,
+    badgeColor: 'from-indigo-400 via-purple-500 to-pink-500',
+    icon: '🪐'
+  },
+  {
+    id: 'title_void',
+    title: '【虚空超越の真・覇者】',
+    sub: 'Void Transcendence Sovereign',
+    desc: '人間の記憶の限界を超え、虚空の彼方へと昇華した究極の語彙マスター',
+    cost: 150000,
+    badgeColor: 'from-cyan-300 via-white to-amber-300 shadow-[0_0_20px_rgba(255,255,255,0.8)]',
+    icon: '💠'
+  },
+  {
+    id: 'title_absolute',
+    title: '【1800語制覇の絶対神】',
+    sub: 'Absolute Spell God: 1800 Master',
+    desc: '1,800語の全単語を完全掌握し、スペルブラスターの頂点に君臨する神話',
+    cost: 300000,
+    badgeColor: 'from-amber-300 via-pink-400 to-cyan-300 neon-gold shadow-[0_0_30px_rgba(251,191,36,1)] animate-pulse',
+    icon: '✨'
+  }
+];
 
     // ===== src/constants/storageKeys.js =====
 const STORAGE_KEY_WORDS = 'spelling_app_words_v2';
@@ -15628,11 +15828,34 @@ const getDailyOverdriveTier = (answeredCount = 0) => {
     prevTarget: 0
   };
 };
+
+/**
+ * フィーバーモード（サドンデス）専用の得点倍率計算
+ * - 1〜4問目: 0.20x 〜 0.80x
+ * - 5問目: 1.00x（通常モードと同じ得点にジャスト到達）
+ * - 5問目以降: 連続正解数に応じて急激に上昇するカーブ（アイテム feverAcceleratorLv で加速）
+ */
+const calculateFeverModeMultiplier = (feverCombo = 1, feverAcceleratorLv = 0) => {
+  const c = Math.max(1, feverCombo);
+  if (c <= 5) {
+    return Number((c * 0.20).toFixed(2));
+  }
+  const extra = c - 5;
+  const lv = Math.max(0, feverAcceleratorLv);
+  // 初期(Lv 0)は穏やか: 10問で1.17x、20問で1.68x、50問で4.38x（通常モードを壊さない適正倍率）
+  // HYPER FEVER CORE を強化すると爆発加速: Lv 5で10問2.75x/20問10.57x、Lv 10で10問4.52x/20問21.30x、Lv 20で10問8.49x/20問46.47x！
+  const linearRate = 0.03 + (lv * 0.035);
+  const quadRate = 0.001 + (lv * 0.004) + (Math.pow(lv, 1.6) * 0.0006);
+  const mult = 1.0 + (extra * linearRate) + (extra * extra * quadRate);
+  return Number(mult.toFixed(2));
+};
 const calculateReward = ({
   isCorrect,
   isBoss,
   justMastered,
   isAlreadyMastered = false,
+  isFeverMode = false,
+  feverCombo = 0,
   currentCombo,
   isSpeedBonus,
   isCheated,
@@ -15709,7 +15932,11 @@ const calculateReward = ({
     sp *= jackpotMult;
   }
 
-  // 8. SP超次元増幅 & 量子神話コアの最終乗算
+  // 8. SP超次元増幅 & 習得者の覇気オーラ & 量子神話コアの最終乗算
+  const masteryAuraLv = upgrades.masteryAuraLv || 0;
+  if (masteryAuraLv > 0) {
+    sp *= (1.0 + (masteryAuraLv * 0.10));
+  }
   if (spAmplifierLv > 0) {
     sp *= (1.0 + (spAmplifierLv * 0.10));
   }
@@ -15730,7 +15957,15 @@ const calculateReward = ({
     sp += 250 + (bossBountyLv * 150);
   }
 
-  // 10. 連続ファームペナルティ
+  // 10. フィーバーモード専用倍率 (5問で等倍、以降急上昇カーブ)
+  let feverModeMultiplier = 1.0;
+  if (isFeverMode) {
+    const feverAcceleratorLv = upgrades.feverAcceleratorLv || 0;
+    feverModeMultiplier = calculateFeverModeMultiplier(feverCombo || currentCombo || 1, feverAcceleratorLv);
+    sp *= feverModeMultiplier;
+  }
+
+  // 11. 連続ファームペナルティ
   if (isRepeatedFarm) sp *= 0.1;
 
   const rawSP = Math.max(1, Math.round(sp));
@@ -15751,6 +15986,8 @@ const calculateReward = ({
     jackpotMult,
     justMastered: !!justMastered,
     isAlreadyMastered: effectiveAlreadyMastered,
+    isFeverMode: !!isFeverMode,
+    feverModeMultiplier,
     masterBonus
   };
 };
@@ -15798,19 +16035,146 @@ const formatScore = (num, decimals = 2) => {
 };
 
 /**
- * 複数の回答候補（"a, an" や "a / an" など）を抽出して配列で返す
+ * ギリシャ文字・キリル文字等のホモグリフ（見た目が英字と同じ異種文字）および全角英数をASCII英字に正規化
+ */
+const normalizeHomoglyphs = (str) => {
+  if (!str) return '';
+  let res = String(str);
+
+  // 全角英数字を半角に正規化
+  res = res.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+  // 全角スペース・全角ピリオドを半角に
+  res = res.replace(/　/g, ' ').replace(/[．。]/g, '.');
+
+  // ホモグリフ置換テーブル (ギリシャ文字・キリル文字 -> ASCII英字)
+  const homoglyphMap = {
+    // ギリシャ文字大文字
+    '\u0391': 'A', '\u0392': 'B', '\u0395': 'E', '\u0396': 'Z',
+    '\u0397': 'H', '\u0399': 'I', '\u039A': 'K', '\u039C': 'M',
+    '\u039D': 'N', '\u039F': 'O', '\u03A1': 'P', '\u03A4': 'T',
+    '\u03A5': 'Y', '\u03A7': 'X',
+    // ギリシャ文字小文字
+    '\u03B1': 'a', '\u03BF': 'o', '\u03BA': 'k', '\u03BD': 'v',
+    // キリル文字大文字
+    '\u0410': 'A', '\u0412': 'B', '\u0415': 'E', '\u041A': 'K',
+    '\u041C': 'M', '\u041D': 'H', '\u041E': 'O', '\u0420': 'P',
+    '\u0421': 'C', '\u0422': 'T', '\u0425': 'X',
+    // キリル文字小文字
+    '\u0430': 'a', '\u0435': 'e', '\u043E': 'o', '\u0440': 'p',
+    '\u0441': 'c', '\u0443': 'y', '\u0445': 'x',
+  };
+
+  return res.replace(/[\u0370-\u03FF\u0400-\u04FF]/g, ch => homoglyphMap[ch] || ch);
+};
+
+/**
+ * 複数の回答候補（"a, an", "few (a few)", "(a) few", "OK/O.K.", "color (colour)" など）を抽出して配列で返す
  */
 const getAnswerCandidates = (rawWord) => {
   if (!rawWord) return [];
-  const trimmed = String(rawWord).trim();
-  // カンマ、スラッシュ、全角カンマ、全角スラッシュ、セミコロンで分割
-  const parts = trimmed
-    .split(/[,/，／;；]/)
-    .map(p => p.trim())
-    .filter(p => p.length > 0);
+  // ホモグリフ（ギリシャ文字・キリル文字等の混入）をASCII英字へ完全正規化
+  let rawStr = normalizeHomoglyphs(rawWord).trim();
+  if (!rawStr) return [];
 
-  // 原文そのままも含め、重複を排除して返却
-  return Array.from(new Set([trimmed, ...parts]));
+  // "a.m.A.M." のようなスラッシュ欠落連結を自動分割
+  rawStr = rawStr.replace(/([a-zA-Z]\.[a-zA-Z]\.)([a-zA-Z]\.[a-zA-Z]\.)/g, '$1 / $2');
+
+  const candidatesSet = new Set();
+
+  // 1. カンマ、スラッシュ、セミコロン（半角・全角）で大分割
+  const primarySegments = rawStr
+    .split(/[,/，／;；]/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const segmentsToProcess = Array.from(new Set([rawStr, ...primarySegments]));
+
+  segmentsToProcess.forEach(segment => {
+    // 括弧（全角・角括弧含む）を半角丸括弧に統一
+    const normalized = segment
+      .replace(/[（［\[]/g, '(')
+      .replace(/[）］\]]/g, ')');
+
+    if (/\([^)]+\)/.test(normalized)) {
+      // パターン1: 括弧の中身を抽出 (例: "few (a few)" -> "a few")
+      const matches = normalized.match(/\(([^)]+)\)/g);
+      if (matches) {
+        matches.forEach(m => {
+          const inner = m.slice(1, -1).trim();
+          if (inner) candidatesSet.add(inner);
+        });
+      }
+
+      // パターン2: 括弧とその中身を丸ごと除去 (例: "few (a few)" -> "few", "(a) few" -> "few")
+      const withoutParen = normalized
+        .replace(/\([^)]*\)/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (withoutParen) candidatesSet.add(withoutParen);
+
+      // パターン3: 括弧記号のみを除去 (例: "(a) few" -> "a few")
+      const withoutBrackets = normalized
+        .replace(/[()]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (withoutBrackets) candidatesSet.add(withoutBrackets);
+    } else {
+      const clean = normalized.replace(/\s+/g, ' ').trim();
+      if (clean) candidatesSet.add(clean);
+    }
+  });
+
+  // ドット付き略語（例: "O.K.", "p.m.", "a.m." など）のバリエーションを展開
+  const currentList = Array.from(candidatesSet);
+  currentList.forEach(c => {
+    if (c.includes('.')) {
+      // ドットを完全に除去した形 (例: "O.K." -> "OK", "p.m." -> "pm")
+      const noDots = c.replace(/\./g, '').trim();
+      if (noDots) candidatesSet.add(noDots);
+
+      // 末尾のドットのみを除去した形 (例: "O.K." -> "O.K")
+      if (c.endsWith('.')) {
+        const trimmedDot = c.slice(0, -1).trim();
+        if (trimmedDot) candidatesSet.add(trimmedDot);
+      }
+    }
+  });
+
+  candidatesSet.add(rawStr);
+  return Array.from(candidatesSet).filter(c => c && c.length > 0);
+};
+
+/**
+ * 画面表示用（文字数表示やDiffViewer用）のクリーンな正解候補リスト
+ * 括弧や区切り文字を含まない純粋な単語候補のみを抽出
+ */
+const getCleanCandidates = (rawWord) => {
+  if (!rawWord) return [];
+  const all = getAnswerCandidates(rawWord);
+  // 括弧や区切り記号を含まない候補
+  const clean = all.filter(c => !/[()（）\[\]［］,/，／;；]/.test(c));
+  
+  // 不要な多重結合（例: "few a few" など）を表示用から除外
+  const filtered = clean.filter(c => {
+    const parts = c.split(/\s+/);
+    if (parts.length >= 3 && clean.some(other => other !== c && c.includes(other))) {
+      const remaining = clean.filter(other => other !== c && c.includes(other));
+      if (remaining.length >= 2) return false;
+    }
+    return true;
+  });
+
+  const unique = [];
+  // 短い順、かつドット無しの代表形を優先してソート
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.length !== b.length) return a.length - b.length;
+    return a.localeCompare(b);
+  });
+  sorted.forEach(c => {
+    if (!unique.includes(c)) unique.push(c);
+  });
+
+  return unique.length > 0 ? unique : [normalizeHomoglyphs(rawWord).trim()];
 };
 
 /**
@@ -15818,12 +16182,25 @@ const getAnswerCandidates = (rawWord) => {
  */
 const checkAnswerCorrectness = (userInput, rawWord) => {
   if (!userInput || !rawWord) return false;
-  let cleanInput = String(userInput).trim().toLowerCase();
-  // 全角英数字を半角に正規化し、全角スペースも半角へ変換
-  cleanInput = cleanInput.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-  cleanInput = cleanInput.replace(/　/g, ' ');
+  let cleanInput = normalizeHomoglyphs(userInput).trim().toLowerCase();
+  cleanInput = cleanInput.replace(/\s+/g, ' ');
+
   const candidates = getAnswerCandidates(rawWord);
-  return candidates.some(c => c.toLowerCase() === cleanInput);
+
+  // 1. 通常の候補一致（大文字小文字無視）
+  if (candidates.some(c => c.toLowerCase() === cleanInput)) {
+    return true;
+  }
+
+  // 2. ドットの有無を柔軟に許容する判定 (例: 入力 "ok" に対し "o.k."、または入力 "o.k." に対し "ok")
+  const inputNoDots = cleanInput.replace(/\./g, '');
+  if (inputNoDots.length > 0) {
+    if (candidates.some(c => c.toLowerCase().replace(/\./g, '') === inputNoDots)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 /**
  * 単語の文字数に応じた復習ステップ回数を取得
@@ -15833,7 +16210,7 @@ const checkAnswerCorrectness = (userInput, rawWord) => {
  */
 const getReviewStepsCount = (rawWord) => {
   if (!rawWord) return 4;
-  const candidates = getAnswerCandidates(rawWord);
+  const candidates = getCleanCandidates(rawWord);
   // 各候補の英数字文字数（記号・空白除く）を計算
   const lengths = candidates.map(c => {
     const letters = c.replace(/[^a-zA-Z0-9]/g, '');
@@ -15959,7 +16336,7 @@ const formatHintWord = (rawWord) => {
     // ===== src/components/DiffViewer.jsx =====
 const DiffViewer = ({ userInput, correctWord }) => {
   const cleanInput = (userInput || '').trim();
-  const rawParts = (correctWord || '').split(/[,/，／;；]/).map(w => w.trim()).filter(Boolean);
+  const rawParts = getCleanCandidates(correctWord);
   const isMultiple = rawParts.length > 1;
 
   // 複数候補がある場合、入力文字長に最も近い候補をDiffハイライトの基準にする
@@ -16234,11 +16611,33 @@ const MenuScreen = ({
         </div>
       </div>
 
-      {/* 2. タイトル (コンパクト化) */}
+      {/* 2. タイトル ＆ 装備称号バッジ */}
       <div className="text-center my-1">
         <h1 className="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-500 font-mono cyber-title">
           SPELL BLASTER
         </h1>
+        {/* 称号バッジ ＆ MP残高ピル */}
+        {(() => {
+          const currentTitleObj = MASTERY_TITLES_CONFIG.find(t => t.title === gameData.equippedTitle);
+          const badgeGrad = currentTitleObj ? currentTitleObj.badgeColor : 'from-amber-500 to-yellow-600';
+          return (
+            <div className="flex items-center justify-center gap-2 mt-0.5 flex-wrap">
+              <span className={`text-[9px] font-mono font-black text-white bg-gradient-to-r ${badgeGrad} border border-white/40 px-2.5 py-0.5 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.4)] flex items-center gap-1`}>
+                <span>{currentTitleObj?.icon || '🎖️'}</span>
+                <span>{gameData.equippedTitle || 'かけだしのスペラー'}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setScreen('shop')}
+                className="text-[9px] font-mono font-black text-amber-300 bg-black/80 hover:bg-black border border-amber-500/60 px-2 py-0.5 rounded-full flex items-center gap-1 active:scale-95 transition-all shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+              >
+                <span>👑</span>
+                <span>{(gameData.mp || 0).toLocaleString()} MP</span>
+                <span className="text-[8px] text-amber-400 opacity-80">▶</span>
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* 3. 【統合版】サイバー成長HUD (SP3大メトリクス + デイリーノルマを完全統合・かぶり解消) */}
@@ -16469,6 +16868,33 @@ const MenuScreen = ({
           <span className="text-base font-black">START ▶</span>
         </button>
 
+        {/* フィーバーモード (サドンデス: 1ミス即終了 / 5問で通常得点、以降青天井) */}
+        <button
+          onClick={() => startQuiz('fever')}
+          className="w-full bg-gradient-to-r from-amber-600 via-rose-600 to-red-700 hover:from-amber-500 hover:to-red-600 text-white font-black py-2.5 px-3 rounded-2xl shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95 transition-all font-mono tracking-wider flex items-center justify-between border border-rose-400/50"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xl p-1 bg-black/30 rounded-xl">🔥</span>
+            <div className="text-left">
+              <div className="text-xs font-black text-amber-200 flex items-center gap-1.5 flex-wrap">
+                <span>FEVER MODE (SUDDEN DEATH)</span>
+                {(gameData.maxFeverCombo || 0) > 0 && (
+                  <span className="text-[8px] bg-black/60 text-amber-300 border border-amber-500/50 px-1.5 py-0.2 rounded font-bold">
+                    BEST: {gameData.maxFeverCombo}連勝
+                  </span>
+                )}
+              </div>
+              <div className="text-[8px] text-rose-100 font-bold">
+                1ミス即終了！5問目で1.0x到達、以降は青天井で得点爆発
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-black bg-black/30 px-2.5 py-1.5 rounded-lg border border-rose-400/30 flex items-center gap-1">
+            <span>START</span>
+            <span>🔥</span>
+          </span>
+        </button>
+
         {/* サブ: エンドレス & 苦手特訓 を横並びにして縦幅を半減！ */}
         <div className="grid grid-cols-2 gap-1.5 font-mono">
           <button
@@ -16528,7 +16954,7 @@ const MenuScreen = ({
 
         {/* コピーライト & バージョン表記 */}
         <div className="mt-1.5 text-center text-[9px] font-mono text-slate-500/80 tracking-wider">
-          &copy; もずずんゲームス &bull; v1.2.0
+          &copy; もずずんゲームス &bull; {FULL_VERSION_STRING}
         </div>
       </div>
     </div>
@@ -16541,6 +16967,10 @@ const QuizScreen = ({
   currentIndex,
   sessionQuestionCount = 10,
   isEndlessMode,
+  isFeverMode,
+  feverMilestone,
+  setFeverMilestone,
+  gameData = {},
   isBossQuestion,
   showBossIntro,
   toastNotice,
@@ -16591,7 +17021,11 @@ const QuizScreen = ({
     const handleGlobalKeyDown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleNextQuestion();
+        if (isFeverMode) {
+          setScreen('result');
+        } else {
+          handleNextQuestion();
+        }
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -16621,6 +17055,48 @@ const QuizScreen = ({
           <div className="text-6xl mb-3">⚠️</div>
           <div className="text-4xl font-black text-amber-300 tracking-widest uppercase font-mono shadow-lg">WARNING!!</div>
           <div className="text-xl font-black text-white mt-2">強敵（復習ターゲット）が急襲！</div>
+        </div>
+      )}
+
+      {/* 🔥 10問ごと FEVER MILESTONE 派手な祝賀モーダル 🔥 */}
+      {feverMilestone && (
+        <div
+          onClick={() => setFeverMilestone && setFeverMilestone(null)}
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn cursor-pointer"
+        >
+          <div className="bg-gradient-to-b from-amber-950 via-rose-950 to-black border-2 border-amber-400 rounded-3xl p-6 text-center max-w-sm w-full shadow-[0_0_60px_rgba(251,191,36,0.9)] animate-popIn relative overflow-hidden">
+            {/* 背景キラキラ光線 */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.25)_0%,transparent_70%)] animate-pulse pointer-events-none" />
+
+            <div className="text-6xl mb-2 animate-bounce">🔥</div>
+            <div className="text-xs text-yellow-300 font-mono font-black tracking-widest uppercase mb-1 flex items-center justify-center gap-1.5">
+              <span>★</span>
+              <span>FEVER MILESTONE REACHED</span>
+              <span>★</span>
+            </div>
+            <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]">
+              {feverMilestone.combo} <span className="text-amber-400">連勝突破!!</span>
+            </div>
+            <div className="my-3 py-2 px-3 bg-black/60 border border-amber-500/50 rounded-2xl">
+              <div className="text-[10px] text-slate-400 font-mono font-bold">現在の獲得SP倍率</div>
+              <div className="text-2xl font-black text-amber-300 font-mono neon-gold">
+                ×{feverMilestone.multiplier}倍 【急加速中】
+              </div>
+            </div>
+            <p className="text-xs font-bold text-rose-200 mb-4 font-mono">
+              神速突破！サドンデス不落の記録更新中！
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFeverMilestone && setFeverMilestone(null);
+              }}
+              className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-black py-3 rounded-2xl font-mono text-sm shadow-[0_0_20px_rgba(251,191,36,0.6)] active:scale-95 transition-all"
+            >
+              KEEP GOING ▶ (タップで続行)
+            </button>
+          </div>
         </div>
       )}
 
@@ -16661,20 +17137,27 @@ const QuizScreen = ({
             ⏹ QUIT
           </button>
           <div className="flex items-center gap-2 font-mono">
-            {/* ヒントトグルボタン */}
-            <button
-              onClick={() => setIsHintMode(!isHintMode)}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold active:scale-95 transition-all ${
-                isHintMode
-                  ? 'bg-amber-950/80 text-amber-300 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                  : 'bg-slate-900 text-slate-500 border-slate-800'
-              }`}
-            >
-              <span>👁️ HINT {isHintMode ? 'ON' : 'OFF'}</span>
-              {isHintMode && (
-                <span className="text-[8px] bg-amber-500 text-black px-1 rounded font-black">-75% SP</span>
-              )}
-            </button>
+            {/* ヒントトグルボタン (フィーバーモードでは完全使用不可) */}
+            {isFeverMode ? (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded border border-slate-800 bg-slate-900/60 text-[10px] font-bold text-slate-500 select-none">
+                <span>🚫 NO HINT</span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsHintMode(!isHintMode)}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold active:scale-95 transition-all ${
+                  isHintMode
+                    ? 'bg-amber-950/80 text-amber-300 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                    : 'bg-slate-900 text-slate-500 border-slate-800'
+                }`}
+              >
+                <span>👁️ HINT {isHintMode ? 'ON' : 'OFF'}</span>
+                {isHintMode && (
+                  <span className="text-[8px] bg-amber-500 text-black px-1 rounded font-black">-75% SP</span>
+                )}
+              </button>
+            )}
 
             {currentSessionCombo > 1 && (
               <span
@@ -16685,13 +17168,39 @@ const QuizScreen = ({
                 {feverDetail ? feverDetail.label : `⚡ ${currentSessionCombo}`}
               </span>
             )}
-            <span className="text-xs font-bold text-yellow-400 font-mono">🪙 {formatScore(sessionEarnedGold)}</span>
+            <div className="flex items-center gap-1.5 font-mono">
+              <span className="text-xs font-bold text-yellow-400">🪙 {formatScore(sessionEarnedGold)}</span>
+              {(gameData.mp || 0) > 0 && (
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-600/50 px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
+                  <span>👑</span>
+                  <span>{gameData.mp}</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="mb-2">
-          <div className="flex justify-between text-[10px] font-mono mb-1">
-            <span className="text-slate-500">{isEndlessMode ? `STAGE: ${currentIndex + 1}` : `Q: ${currentIndex + 1} / 10`}</span>
+          <div className="flex justify-between items-center text-[10px] font-mono mb-1">
+            <span className={isFeverMode ? 'text-rose-400 font-bold flex items-center gap-1' : 'text-slate-500'}>
+              {isFeverMode ? (
+                <>
+                  <span className="animate-pulse">🔥</span>
+                  <span>FEVER SUDDEN DEATH</span>
+                  <span className="text-slate-400 ml-1">STAGE: {currentIndex + 1}</span>
+                </>
+              ) : isEndlessMode ? (
+                `STAGE: ${currentIndex + 1}`
+              ) : (
+                `Q: ${currentIndex + 1} / 10`
+              )}
+            </span>
+            {isFeverMode && (
+              <span className="px-2 py-0.2 rounded-full text-[9px] font-mono font-black bg-gradient-to-r from-amber-500 to-rose-500 text-black shadow">
+                ×{calculateFeverModeMultiplier(currentSessionCombo, gameData?.upgrades?.feverAcceleratorLv || 0)}倍
+                {currentSessionCombo < 5 ? ` (5問目で等倍)` : ''}
+              </span>
+            )}
           </div>
           <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
             <div
@@ -16719,11 +17228,11 @@ const QuizScreen = ({
             </span>
             <span className="text-[10px] font-mono text-slate-400">
               ({(() => {
-                const parts = (currentWord.word || '').split(/[,/，／;；]/).map(w => w.trim()).filter(Boolean);
-                if (parts.length > 1) {
-                  return `${parts.map(p => `${p.length}`).join(' / ')} letters`;
+                const cleanCandidates = getCleanCandidates(currentWord.word);
+                if (cleanCandidates.length > 1) {
+                  return `${cleanCandidates.map(p => `${p.length}`).join(' / ')} letters`;
                 }
-                return `${currentWord.word.length} letters`;
+                return `${(cleanCandidates[0] || currentWord.word).length} letters`;
               })()})
             </span>
           </div>
@@ -16741,7 +17250,7 @@ const QuizScreen = ({
         </div>
 
         {/* ヒントモード時のお手本スペル (和文を邪魔しない落ち着いたサイバーHUDアシスト) */}
-        {isHintMode && answerStatus === null && (
+        {!isFeverMode && isHintMode && answerStatus === null && (
           <div className="mt-3 bg-slate-900/90 border border-slate-700/60 rounded-2xl py-2 px-3 text-center shadow-inner">
             <div className="text-[8px] font-mono font-bold tracking-wider text-amber-400 uppercase mb-0.5 flex items-center justify-center gap-1.5 flex-wrap">
               <span>👁️ SPELL GUIDE</span>
@@ -16753,11 +17262,11 @@ const QuizScreen = ({
               {formatHintWord(currentWord.word)}
             </div>
             {(() => {
-              const parts = (currentWord.word || '').split(/[,/，／;；]/).map(w => w.trim()).filter(Boolean);
+              const parts = getCleanCandidates(currentWord.word);
               if (parts.length > 1) {
                 return (
                   <div className="text-[9px] text-cyan-400/80 font-mono mt-0.5">
-                    ※いずれかを入力すれば正解になります
+                    ※いずれかを入力すれば正解になります ({parts.join(' / ')})
                   </div>
                 );
               }
@@ -16880,7 +17389,21 @@ const QuizScreen = ({
               onDrop={(e) => e.preventDefault()}
               className={`w-full bg-black/80 border-2 rounded-2xl py-3 px-4 text-center text-2xl font-mono mobile-input placeholder:text-slate-700 transition-all shadow-inner ${inputBorderColor}`}
             />
-            {answerStatus === 'incorrect' && turnRewardDetail?.isCheatFailed && (
+            {answerStatus === 'incorrect' && isFeverMode && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <div className="text-rose-300 font-black text-xl md:text-2xl font-mono stamp-anim bg-black/95 px-6 py-3 rounded-2xl backdrop-blur-md border-2 border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.9)] flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-xs text-rose-400 font-bold tracking-widest uppercase">
+                    <span>🔥</span>
+                    <span>SUDDEN DEATH!!</span>
+                    <span>🔥</span>
+                  </div>
+                  <div className="text-base font-black text-white mt-0.5">
+                    フィーバー終了！
+                  </div>
+                </div>
+              </div>
+            )}
+            {answerStatus === 'incorrect' && !isFeverMode && turnRewardDetail?.isCheatFailed && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="text-rose-300 font-black text-xl md:text-2xl font-mono stamp-anim bg-black/95 px-6 py-3 rounded-2xl backdrop-blur-md border-2 border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.9)] flex flex-col items-center">
                   <div className="flex items-center gap-1.5 text-xs text-rose-400 font-bold tracking-widest uppercase">
@@ -16979,15 +17502,27 @@ const QuizScreen = ({
             </button>
           ) : (
             answerStatus === 'incorrect' && (
-              <button
-                ref={nextBtnRef}
-                type="button"
-                onClick={handleNextQuestion}
-                autoFocus
-                className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in focus:ring-4 focus:ring-rose-400"
-              >
-                NEXT ▶ (ENTER)
-              </button>
+              isFeverMode ? (
+                <button
+                  ref={nextBtnRef}
+                  type="button"
+                  onClick={() => setScreen('result')}
+                  autoFocus
+                  className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-3 rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.7)] active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in focus:ring-4 focus:ring-amber-400"
+                >
+                  🔥 FEVER OVER (結果を見る) ▶
+                </button>
+              ) : (
+                <button
+                  ref={nextBtnRef}
+                  type="button"
+                  onClick={handleNextQuestion}
+                  autoFocus
+                  className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in focus:ring-4 focus:ring-rose-400"
+                >
+                  NEXT ▶ (ENTER)
+                </button>
+              )
             )
           )}
         </form>
@@ -17304,6 +17839,8 @@ const ResultScreen = ({
   upgrades = {},
   isReviewCompleted,
   isEndlessMode,
+  isFeverMode,
+  gameData = {},
   isWeakMode,
   toastNotice,
   startReview,
@@ -17334,13 +17871,32 @@ const ResultScreen = ({
       )}
 
       <div>
-        <div className="inline-block p-4 bg-gradient-to-tr from-amber-500 to-pink-500 rounded-3xl mb-2 shadow-lg">
-          <span className="text-4xl">👑</span>
-        </div>
-        <h2 className={`text-xl font-black font-mono tracking-wider uppercase mb-1 ${rankColor}`}>{rankTitle}</h2>
-        <div className="text-4xl font-black text-white font-mono tracking-tight mb-2">
-          {correctCount} / {total} <span className="text-cyan-400 text-2xl">({scorePercent}%)</span>
-        </div>
+        {isFeverMode ? (
+          <>
+            <div className="inline-block p-4 bg-gradient-to-tr from-rose-600 via-amber-500 to-red-600 rounded-3xl mb-2 shadow-lg animate-pulse">
+              <span className="text-4xl">🔥</span>
+            </div>
+            <h2 className="text-xl font-black font-mono tracking-wider uppercase mb-1 text-amber-300 neon-gold">
+              🔥 FEVER RUN OVER 🔥
+            </h2>
+            <div className="text-4xl font-black text-white font-mono tracking-tight mb-1">
+              {correctCount} <span className="text-amber-400 text-2xl">連勝達成!</span>
+            </div>
+            <div className="text-xs font-mono text-slate-300 mb-2">
+              自己ベスト: <span className="text-amber-400 font-bold">{Math.max(gameData?.maxFeverCombo || 0, correctCount)} 連勝</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="inline-block p-4 bg-gradient-to-tr from-amber-500 to-pink-500 rounded-3xl mb-2 shadow-lg">
+              <span className="text-4xl">👑</span>
+            </div>
+            <h2 className={`text-xl font-black font-mono tracking-wider uppercase mb-1 ${rankColor}`}>{rankTitle}</h2>
+            <div className="text-4xl font-black text-white font-mono tracking-tight mb-2">
+              {correctCount} / {total} <span className="text-cyan-400 text-2xl">({scorePercent}%)</span>
+            </div>
+          </>
+        )}
         {newlyMasteredWords.length > 0 && (
           <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-950/80 via-yellow-950/60 to-amber-950/80 border border-amber-400/80 rounded-xl px-3 py-1 mb-2 font-mono text-xs text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.35)] animate-pulse">
             <span className="text-sm">👑</span>
@@ -17453,7 +18009,14 @@ const ResultScreen = ({
           </div>
         )}
 
-        {!isEndlessMode && (
+        {isFeverMode ? (
+          <button
+            onClick={() => startQuiz('fever')}
+            className="w-full bg-gradient-to-r from-amber-600 via-rose-600 to-red-700 hover:from-amber-500 hover:to-red-600 text-white font-black py-3 rounded-2xl shadow-[0_0_20px_rgba(244,63,94,0.5)] text-xs font-mono tracking-wider mb-2 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <span>🔥 もう一度フィーバーに挑む (RETRY FEVER)</span>
+          </button>
+        ) : !isEndlessMode && (
           <button
             onClick={() => startQuiz(isWeakMode ? 'weak' : 'normal')}
             className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3 rounded-2xl shadow-lg text-xs font-mono mb-2 active:scale-95 transition-all flex items-center justify-center gap-1.5"
@@ -17489,6 +18052,7 @@ const ShopScreen = ({
   const [chestResult, setChestResult] = useState(null);
   const [isOpeningChest, setIsOpeningChest] = useState(false);
   const [activeChestTier, setActiveChestTier] = useState('normal'); // 'normal' | 'mega' | 'giga'
+  const [activeShopTab, setActiveShopTab] = useState('sp'); // 'sp' | 'mp' 
 
   const todayStr = getLocalDateStr();
   const alreadyBoughtToday = gameData.lastShieldBuyDate === todayStr;
@@ -17643,193 +18207,382 @@ const ShopScreen = ({
       )}
 
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
           <button onClick={() => setScreen('menu')} className="text-xs text-indigo-400 font-semibold p-1 active:scale-95">
             ← メニュー
           </button>
           <h2 className="text-base font-black text-yellow-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
-            <span>🛒 CYBER SHOP</span>
+            <span>🛒 SHOP & VAULT</span>
           </h2>
           <div className="w-12"></div>
         </div>
 
-        {/* 所持SP残高 (インクリメンタルゲーム式アルファベット表記) */}
-        <div className="bg-gradient-to-br from-yellow-950/80 via-slate-900/90 to-amber-950/80 border-2 border-yellow-500/80 rounded-3xl p-3.5 mb-3.5 text-center shadow-[0_0_25px_rgba(234,179,8,0.25)]">
-          <div className="text-[10px] text-yellow-400 font-mono tracking-widest uppercase font-bold">TOTAL BALANCE</div>
-          <div className="text-3xl sm:text-4xl font-black text-yellow-300 font-mono tracking-tight mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
-            <span>🪙</span>
-            <span>{formatScore(gameData.gold)}</span>
-            <span className="text-xs sm:text-sm text-yellow-400 font-normal">SP</span>
-          </div>
-          {gameData.gold >= 1000 && (
-            <div className="text-[9px] text-yellow-400/80 font-mono mt-0.5">
-              ({gameData.gold.toLocaleString()} SP)
-            </div>
-          )}
+        {/* SHOP 切り替えタブ (SP SHOP vs MP VAULT) */}
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/60 border border-slate-800 rounded-2xl mb-3 font-mono">
+          <button
+            type="button"
+            onClick={() => setActiveShopTab('sp')}
+            className={`py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+              activeShopTab === 'sp'
+                ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🪙 SP SHOP</span>
+            <span className="text-[9px] opacity-80">({formatScore(gameData.gold)})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveShopTab('mp')}
+            className={`py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+              activeShopTab === 'mp'
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.5)]'
+                : 'text-slate-400 hover:text-amber-300'
+            }`}
+          >
+            <span>👑 MP VAULT</span>
+            <span className="text-[9px] opacity-80">({(gameData.mp || 0).toLocaleString()} MP)</span>
+          </button>
         </div>
 
-        {/* スペシャル目玉商品（3段階ガチャ宝箱 & シールド） */}
-        <div className="grid grid-cols-2 gap-2 mb-3 font-mono">
-          {/* サイバー宝箱ガチャ (3段階切り替え) */}
-          <div className="bg-gradient-to-br from-purple-950/70 to-slate-900 border border-purple-500/60 rounded-2xl p-2.5 text-center flex flex-col justify-between shadow">
-            <div>
-              {/* 宝箱ランク切り替えタブ */}
-              <div className="flex bg-black/60 rounded-lg p-0.5 mb-1.5 border border-purple-800/60 text-[8px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setActiveChestTier('normal')}
-                  className={`flex-1 py-0.5 rounded ${activeChestTier === 'normal' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}
-                >
-                  通常
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveChestTier('mega')}
-                  className={`flex-1 py-0.5 rounded ${activeChestTier === 'mega' ? 'bg-pink-600 text-white' : 'text-slate-400'}`}
-                >
-                  MEGA
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveChestTier('giga')}
-                  className={`flex-1 py-0.5 rounded ${activeChestTier === 'giga' ? 'bg-amber-500 text-black font-black' : 'text-slate-400'}`}
-                >
-                  GIGA
-                </button>
+                {activeShopTab === 'sp' ? (
+          <>
+            {/* 所持SP残高 (インクリメンタルゲーム式アルファベット表記) */}
+            <div className="bg-gradient-to-br from-yellow-950/80 via-slate-900/90 to-amber-950/80 border-2 border-yellow-500/80 rounded-3xl p-3 mb-3 text-center shadow-[0_0_25px_rgba(234,179,8,0.25)]">
+              <div className="text-[10px] text-yellow-400 font-mono tracking-widest uppercase font-bold">TOTAL BALANCE</div>
+              <div className="text-3xl sm:text-4xl font-black text-yellow-300 font-mono tracking-tight mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
+                <span>🪙</span>
+                <span>{formatScore(gameData.gold)}</span>
+                <span className="text-xs sm:text-sm text-yellow-400 font-normal">SP</span>
               </div>
-
-              <div className="text-xl mb-0.5">{currentChestConfig.icon}</div>
-              <div className="text-xs font-black text-purple-200 truncate">
-                {currentChestConfig.name}
-              </div>
-              <div className="text-[8px] text-slate-400 mt-0.5 leading-tight">
-                {activeChestTier === 'giga' ? (
-                  <>最大 <strong className="text-amber-300">200万 SP</strong> 一攫千金!</>
-                ) : activeChestTier === 'mega' ? (
-                  <>最大 <strong className="text-amber-300">15万 SP</strong> 大当たり!</>
-                ) : (
-                  <>最大 <strong className="text-amber-300">5,000 SP</strong> 運試し!</>
-                )}
-              </div>
+              {gameData.gold >= 1000 && (
+                <div className="text-[9px] text-yellow-400/80 font-mono mt-0.5">
+                  ({gameData.gold.toLocaleString()} SP)
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={handleOpenChest}
-              disabled={gameData.gold < currentChestConfig.cost || isOpeningChest}
-              className={`mt-2 font-mono font-black text-[11px] py-1.5 px-2 rounded-xl shadow active:scale-95 transition-all truncate ${
-                gameData.gold < currentChestConfig.cost || isOpeningChest
-                  ? 'bg-slate-800 text-slate-600'
-                  : activeChestTier === 'giga'
-                  ? 'bg-gradient-to-r from-amber-400 to-fuchsia-500 hover:from-amber-300 hover:to-fuchsia-400 text-black'
-                  : activeChestTier === 'mega'
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white'
-              }`}
-            >
-              {isOpeningChest ? '開封中...' : `${formatScore(currentChestConfig.cost)} SP`}
-            </button>
-          </div>
-
-          {/* エナジーシールド */}
-          <div className="bg-gradient-to-br from-emerald-950/70 to-slate-900 border border-emerald-500/60 rounded-2xl p-2.5 text-center flex flex-col justify-between shadow">
-            <div>
-              <div className="text-xl mb-1 mt-1">🛡️</div>
-              <div className="text-xs font-black text-emerald-300 flex items-center justify-center gap-1">
-                <span>SHIELD</span>
-                <span className="text-[9px] bg-emerald-900 text-emerald-200 px-1 rounded">{gameData.shields || 0}/5</span>
-              </div>
-              <div className="text-[8px] text-slate-400 mt-1 leading-tight">
-                誤答時に身代わり発動<br />
-                <span className="text-emerald-400">※1日1個限定購入</span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (!alreadyBoughtToday && !isMaxShield && gameData.gold >= shieldCost) {
-                  setGameData(p => ({
-                    ...p,
-                    gold: p.gold - shieldCost,
-                    shields: (p.shields || 0) + 1,
-                    lastShieldBuyDate: todayStr
-                  }));
-                  SoundFX.playUpgrade();
-                }
-              }}
-              disabled={alreadyBoughtToday || isMaxShield || gameData.gold < shieldCost}
-              className={`mt-2 font-mono font-bold text-[11px] py-1.5 px-2 rounded-xl shadow active:scale-95 transition-all truncate ${
-                alreadyBoughtToday || isMaxShield || gameData.gold < shieldCost
-                  ? 'bg-slate-800 text-slate-500'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-              }`}
-            >
-              {isMaxShield ? 'MAX' : alreadyBoughtToday ? '本日済' : `${formatScore(shieldCost)} SP`}
-            </button>
-          </div>
-        </div>
-
-        {/* パッシブスキル一覧（全12種・ハイエンド拡張） */}
-        <div className="text-[10px] font-mono text-slate-400 font-bold uppercase mb-1.5 px-1 flex items-center justify-between">
-          <span>⚡ PASSIVE UPGRADES (全{UPGRADES_CONFIG.length}種)</span>
-          <span className="text-yellow-400">常時パワーアップ</span>
-        </div>
-
-        <div className="space-y-2 max-h-[48vh] overflow-y-auto pr-1">
-          {UPGRADES_CONFIG.map(upg => {
-            const currentLv = gameData.upgrades?.[upg.key] || 0;
-            const cost = Math.round(upg.baseCost * Math.pow(upg.costMultiplier, currentLv));
-            const isMax = currentLv >= upg.maxLevel;
-            const canAfford = gameData.gold >= cost;
-
-            return (
-              <div
-                key={upg.key}
-                className="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 flex items-center justify-between hover:border-slate-700 transition-all gap-2"
-              >
-                <div className="flex items-center gap-2 pr-1 min-w-0">
-                  <div className="text-xl p-1.5 bg-indigo-950/80 border border-indigo-500/40 rounded-xl flex-shrink-0">
-                    {upg.icon}
+            {/* スペシャル目玉商品（3段階ガチャ宝箱 & シールド） */}
+            <div className="grid grid-cols-2 gap-2 mb-3 font-mono">
+              {/* サイバー宝箱ガチャ (3段階切り替え) */}
+              <div className="bg-gradient-to-br from-purple-950/70 to-slate-900 border border-purple-500/60 rounded-2xl p-2.5 text-center flex flex-col justify-between shadow">
+                <div>
+                  <div className="flex bg-black/60 rounded-lg p-0.5 mb-1.5 border border-purple-800/60 text-[8px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setActiveChestTier('normal')}
+                      className={`flex-1 py-0.5 rounded ${activeChestTier === 'normal' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}
+                    >
+                      通常
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveChestTier('mega')}
+                      className={`flex-1 py-0.5 rounded ${activeChestTier === 'mega' ? 'bg-pink-600 text-white' : 'text-slate-400'}`}
+                    >
+                      MEGA
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveChestTier('giga')}
+                      className={`flex-1 py-0.5 rounded ${activeChestTier === 'giga' ? 'bg-cyan-500 text-black font-black' : 'text-slate-400'}`}
+                    >
+                      GIGA
+                    </button>
                   </div>
-                  <div className="text-left min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-black text-white font-mono truncate">{upg.name}</span>
-                      <span className="text-[8px] bg-indigo-900 text-cyan-300 px-1 py-0.2 rounded font-mono font-bold flex-shrink-0">
-                        Lv.{currentLv}/{upg.maxLevel}
-                      </span>
-                    </div>
-                    <div className="text-[9px] text-slate-400 mt-0.5 leading-tight">
-                      {upg.desc(currentLv)}
-                    </div>
+                  <div className="text-xl mb-1">{currentChestConfig.icon}</div>
+                  <div className="text-xs font-black text-white">{currentChestConfig.name}</div>
+                  <div className="text-[8px] text-slate-400 mt-0.5 leading-tight">{currentChestConfig.desc}</div>
+                </div>
+                <button
+                  onClick={handleOpenChest}
+                  disabled={gameData.gold < currentChestConfig.cost || isOpeningChest}
+                  className={`mt-2 font-mono font-bold text-[11px] py-1.5 px-2 rounded-xl shadow active:scale-95 transition-all truncate ${
+                    gameData.gold < currentChestConfig.cost || isOpeningChest
+                      ? 'bg-slate-800 text-slate-500'
+                      : activeChestTier === 'giga'
+                      ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-black font-black'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white'
+                  }`}
+                >
+                  {isOpeningChest ? '開封中...' : `${formatScore(currentChestConfig.cost)} SP`}
+                </button>
+              </div>
+
+              {/* エナジーシールド */}
+              <div className="bg-gradient-to-br from-emerald-950/70 to-slate-900 border border-emerald-500/60 rounded-2xl p-2.5 text-center flex flex-col justify-between shadow">
+                <div>
+                  <div className="text-xl mb-1 mt-1">🛡️</div>
+                  <div className="text-xs font-black text-emerald-300 flex items-center justify-center gap-1">
+                    <span>SHIELD</span>
+                    <span className="text-[9px] bg-emerald-900 text-emerald-200 px-1 rounded">{gameData.shields || 0}/{gameData.mpUpgrades?.aegisOfWisdom ? 6 : 5}</span>
+                  </div>
+                  <div className="text-[8px] text-slate-400 mt-1 leading-tight">
+                    誤答時に身代わり発動<br />
+                    <span className="text-emerald-400">※1日1個限定購入</span>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    if (!isMax && canAfford) {
+                    const maxS = gameData.mpUpgrades?.aegisOfWisdom ? 6 : 5;
+                    if (!alreadyBoughtToday && (gameData.shields || 0) < maxS && gameData.gold >= shieldCost) {
                       setGameData(p => ({
                         ...p,
-                        gold: p.gold - cost,
-                        upgrades: {
-                          ...p.upgrades,
-                          [upg.key]: (p.upgrades?.[upg.key] || 0) + 1
-                        }
+                        gold: p.gold - shieldCost,
+                        shields: (p.shields || 0) + 1,
+                        lastShieldBuyDate: todayStr
                       }));
                       SoundFX.playUpgrade();
                     }
                   }}
-                  disabled={isMax || !canAfford}
-                  className={`font-mono font-black text-[10px] sm:text-[11px] px-2.5 py-2 rounded-xl shadow whitespace-nowrap active:scale-95 transition-all min-w-[76px] text-center flex-shrink-0 ${
-                    isMax
-                      ? 'bg-slate-800 text-slate-600'
-                      : canAfford
-                      ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black'
-                      : 'bg-slate-800 text-slate-500'
+                  disabled={alreadyBoughtToday || (gameData.shields || 0) >= (gameData.mpUpgrades?.aegisOfWisdom ? 6 : 5) || gameData.gold < shieldCost}
+                  className={`mt-2 font-mono font-bold text-[11px] py-1.5 px-2 rounded-xl shadow active:scale-95 transition-all truncate ${
+                    alreadyBoughtToday || (gameData.shields || 0) >= (gameData.mpUpgrades?.aegisOfWisdom ? 6 : 5) || gameData.gold < shieldCost
+                      ? 'bg-slate-800 text-slate-500'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                   }`}
                 >
-                  {isMax ? 'MAX' : `${formatScore(cost)} SP`}
+                  {(gameData.shields || 0) >= (gameData.mpUpgrades?.aegisOfWisdom ? 6 : 5) ? 'MAX' : alreadyBoughtToday ? '本日済' : `${formatScore(shieldCost)} SP`}
                 </button>
               </div>
-            );
-          })}
-        </div>
+            </div>
+
+            {/* パッシブスキル一覧 */}
+            <div className="text-[10px] font-mono text-slate-400 font-bold uppercase mb-1.5 px-1 flex items-center justify-between">
+              <span>⚡ PASSIVE UPGRADES (全{UPGRADES_CONFIG.length}種)</span>
+              <span className="text-yellow-400">常時パワーアップ</span>
+            </div>
+
+            <div className="space-y-2 max-h-[46vh] overflow-y-auto pr-1">
+              {UPGRADES_CONFIG.map(upg => {
+                const currentLv = gameData.upgrades?.[upg.key] || 0;
+                const cost = Math.round(upg.baseCost * Math.pow(upg.costMultiplier, currentLv));
+                const isMax = currentLv >= upg.maxLevel;
+                const unlockReq = upg.getUnlockReq ? upg.getUnlockReq(currentLv + 1) : null;
+                const isLocked = unlockReq ? ((gameData.maxFeverCombo || 0) < unlockReq.reqCombo) : false;
+                const canAfford = gameData.gold >= cost;
+
+                return (
+                  <div
+                    key={upg.key}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 flex items-center justify-between hover:border-slate-700 transition-all gap-2"
+                  >
+                    <div className="flex items-center gap-2 pr-1 min-w-0">
+                      <div className="text-xl p-1.5 bg-indigo-950/80 border border-indigo-500/40 rounded-xl flex-shrink-0">
+                        {upg.icon}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-black text-white font-mono truncate">{upg.name}</span>
+                          <span className="text-[8px] bg-indigo-900 text-cyan-300 px-1 py-0.2 rounded font-mono font-bold flex-shrink-0">
+                            Lv.{currentLv}/{upg.maxLevel}
+                          </span>
+                        </div>
+                        <div className="text-[9px] text-slate-400 mt-0.5 leading-tight">
+                          {upg.desc(currentLv)}
+                        </div>
+                        {isLocked && (
+                          <div className="text-[8px] text-amber-400 font-mono font-bold mt-1 flex items-center gap-1 bg-amber-950/60 border border-amber-600/50 px-1.5 py-0.5 rounded w-fit">
+                            <span>🔒</span>
+                            <span>フィーバー{unlockReq.label}達成で解放 (最高: {gameData.maxFeverCombo || 0}連勝)</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!isMax && !isLocked && canAfford) {
+                          setGameData(p => ({
+                            ...p,
+                            gold: p.gold - cost,
+                            upgrades: {
+                              ...p.upgrades,
+                              [upg.key]: (p.upgrades?.[upg.key] || 0) + 1
+                            }
+                          }));
+                          SoundFX.playUpgrade();
+                        }
+                      }}
+                      disabled={isMax || isLocked || !canAfford}
+                      className={`font-mono font-black text-[10px] sm:text-[11px] px-2.5 py-2 rounded-xl shadow whitespace-nowrap active:scale-95 transition-all min-w-[76px] text-center flex-shrink-0 ${
+                        isMax
+                          ? 'bg-slate-800 text-slate-600'
+                          : isLocked
+                          ? 'bg-slate-800 text-amber-400 border border-amber-500/40 text-[9px]'
+                          : canAfford
+                          ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black'
+                          : 'bg-slate-800 text-slate-500'
+                      }`}
+                    >
+                      {isMax ? 'MAX' : isLocked ? `🔒 ${unlockReq.label}` : `${formatScore(cost)} SP`}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          /* 👑 MP VAULT (Mastery Points 専用ショップ & 称号) */
+          <>
+            {/* 所持MP残高 */}
+            <div className="bg-gradient-to-br from-amber-950/90 via-slate-900/90 to-yellow-950/90 border-2 border-amber-400 rounded-3xl p-3 mb-3 text-center shadow-[0_0_25px_rgba(251,191,36,0.35)]">
+              <div className="text-[10px] text-amber-300 font-mono tracking-widest uppercase font-bold flex items-center justify-center gap-1">
+                <span>👑</span>
+                <span>MASTERY VAULT (MP SHOP)</span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-black text-amber-300 font-mono tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
+                <span>👑</span>
+                <span>{(gameData.mp || 0).toLocaleString()}</span>
+                <span className="text-xs sm:text-sm text-amber-400 font-normal">MP</span>
+              </div>
+              <div className="text-[8px] text-amber-200/90 font-mono mt-0.5">
+                ※マスター（3連勝済）単語を正解した時のみ手に入る名誉ポイント
+              </div>
+            </div>
+
+            <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+              {/* 1. MP限定アイテム */}
+              <div>
+                <div className="text-[10px] font-mono text-amber-300 font-bold uppercase mb-1.5 px-1 flex items-center justify-between">
+                  <span>👑 MASTERY ARTIFACTS (MP限定秘宝)</span>
+                  <span className="text-xs">全{MASTERY_ITEMS_CONFIG.length}種</span>
+                </div>
+                <div className="space-y-1.5">
+                  {MASTERY_ITEMS_CONFIG.map(item => {
+                    const currentLv = gameData.mpUpgrades?.[item.key] || 0;
+                    const isOneTime = !!item.isOneTime;
+                    const isMax = isOneTime ? currentLv >= 1 : currentLv >= item.maxLevel;
+                    const cost = isOneTime ? item.baseCost : Math.round(item.baseCost * Math.pow(item.costMultiplier, currentLv));
+                    const canAfford = (gameData.mp || 0) >= cost;
+
+                    return (
+                      <div
+                        key={item.key}
+                        className="bg-slate-900 border border-amber-500/30 rounded-2xl p-2.5 flex items-center justify-between hover:border-amber-400/60 transition-all gap-2"
+                      >
+                        <div className="flex items-center gap-2 pr-1 min-w-0">
+                          <div className="text-xl p-1.5 bg-amber-950/80 border border-amber-500/50 rounded-xl flex-shrink-0">
+                            {item.icon}
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-black text-amber-200 font-mono truncate">{item.name}</span>
+                              <span className="text-[8px] bg-amber-950 text-amber-300 border border-amber-600/50 px-1 py-0.2 rounded font-mono font-bold flex-shrink-0">
+                                {isOneTime ? (currentLv > 0 ? '習得済' : 'パッシブ') : `Lv.${currentLv}/${item.maxLevel}`}
+                              </span>
+                            </div>
+                            <div className="text-[9px] text-slate-300 mt-0.5 leading-tight">
+                              {item.desc(isOneTime ? (currentLv > 0) : currentLv)}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (!isMax && canAfford) {
+                              setGameData(p => ({
+                                ...p,
+                                mp: (p.mp || 0) - cost,
+                                mpUpgrades: {
+                                  ...(p.mpUpgrades || {}),
+                                  [item.key]: ((p.mpUpgrades?.[item.key] || 0) + 1)
+                                }
+                              }));
+                              SoundFX.playMastered();
+                            }
+                          }}
+                          disabled={isMax || !canAfford}
+                          className={`font-mono font-black text-[10px] sm:text-[11px] px-2.5 py-2 rounded-xl shadow whitespace-nowrap active:scale-95 transition-all min-w-[76px] text-center flex-shrink-0 ${
+                            isMax
+                              ? 'bg-slate-800 text-slate-600'
+                              : canAfford
+                              ? 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black'
+                              : 'bg-slate-800 text-slate-500'
+                          }`}
+                        >
+                          {isMax ? '習得済' : `${cost} MP`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. MP限定称号 (TITLES) */}
+              <div>
+                <div className="text-[10px] font-mono text-cyan-300 font-bold uppercase mb-1.5 px-1 flex items-center justify-between">
+                  <span>🎖️ MASTERY TITLES (名誉称号)</span>
+                  <span className="text-slate-400 text-[9px]">装備中: <strong className="text-amber-300">{gameData.equippedTitle || 'かけだしのスペラー'}</strong></span>
+                </div>
+                <div className="space-y-1.5">
+                  {MASTERY_TITLES_CONFIG.map(t => {
+                    const purchased = (gameData.purchasedTitles || ['かけだしのスペラー']).includes(t.title);
+                    const isEquipped = gameData.equippedTitle === t.title;
+                    const canAfford = (gameData.mp || 0) >= t.cost;
+
+                    return (
+                      <div
+                        key={t.id}
+                        className={`bg-slate-900 border rounded-2xl p-2.5 flex items-center justify-between transition-all gap-2 ${
+                          isEquipped ? 'border-amber-400 bg-amber-950/30 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'border-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 pr-1 min-w-0">
+                          <div className="text-xl p-1 bg-black/40 rounded-xl flex-shrink-0">
+                            {t.icon}
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`text-xs font-black font-mono ${isEquipped ? 'text-amber-300 neon-gold' : 'text-white'}`}>
+                                {t.title}
+                              </span>
+                              <span className="text-[8px] text-slate-400 font-mono">
+                                {t.sub}
+                              </span>
+                            </div>
+                            <div className="text-[9px] text-slate-400 mt-0.5 leading-tight">
+                              {t.desc}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (isEquipped) return;
+                            if (purchased) {
+                              // 装備
+                              setGameData(p => ({ ...p, equippedTitle: t.title }));
+                              SoundFX.playVictory();
+                            } else if (canAfford) {
+                              // 購入 & 自動装備
+                              setGameData(p => ({
+                                ...p,
+                                mp: (p.mp || 0) - t.cost,
+                                purchasedTitles: [...(p.purchasedTitles || ['かけだしのスペラー']), t.title],
+                                equippedTitle: t.title
+                              }));
+                              SoundFX.playMastered();
+                            }
+                          }}
+                          disabled={isEquipped || (!purchased && !canAfford)}
+                          className={`font-mono font-black text-[10px] sm:text-[11px] px-2.5 py-2 rounded-xl shadow whitespace-nowrap active:scale-95 transition-all min-w-[76px] text-center flex-shrink-0 ${
+                            isEquipped
+                              ? 'bg-amber-400 text-black font-black'
+                              : purchased
+                              ? 'bg-slate-800 text-cyan-300 hover:bg-slate-700 border border-cyan-500/50'
+                              : canAfford
+                              ? 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 text-black'
+                              : 'bg-slate-800 text-slate-500'
+                          }`}
+                        >
+                          {isEquipped ? '★ 装備中' : purchased ? '装備する' : `${t.cost} MP`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <button
@@ -18864,6 +19617,8 @@ function App() {
   const [sessionResults, setSessionResults] = useState([]);
   const [isWeakMode, setIsWeakMode] = useState(false);
   const [isEndlessMode, setIsEndlessMode] = useState(false);
+  const [isFeverMode, setIsFeverMode] = useState(false);
+  const [feverMilestone, setFeverMilestone] = useState(null);
   const [isBossQuestion, setIsBossQuestion] = useState(false);
   const [showBossIntro, setShowBossIntro] = useState(false);
   const [currentSessionCombo, setCurrentSessionCombo] = useState(0);
@@ -18879,6 +19634,15 @@ function App() {
   const [isSpeedBonus, setIsSpeedBonus] = useState(false);
   const [cheatAlertMsg, setCheatAlertMsg] = useState('');
   const [recentAnsweredWordIds, setRecentAnsweredWordIds] = useState([]);
+  // セッションを跨いだ直近出題単語のクールダウン履歴（最大40件・偏り防止用）
+  const [recentGlobalWordIds, setRecentGlobalWordIds] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('spell_blaster_recent_global_words');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const [toastNotice, setToastNotice] = useState(null);
 
@@ -19081,6 +19845,7 @@ function App() {
       if (b.category === 'upgrade_max') return hasAnyMaxUpgrade;
       if (b.category === 'upgrade_total') return totalUpgradeCount >= b.req;
       if (b.category === 'transcendence') return (gameData.upgrades?.transcendenceCoreLv || 0) >= b.req;
+      if (b.category === 'fever') return (gameData.maxFeverCombo || 0) >= b.req;
       return false;
     });
   }, [gameData, totalMasteredWords]);
@@ -19108,6 +19873,77 @@ function App() {
     }
   };
 
+  // 高精度 Fisher-Yates シャッフル（均等な一様ランダム順列生成）
+  const shuffleArray = (array) => {
+    if (!array || array.length <= 1) return [...(array || [])];
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  // フィーバーモード用：自然に苦手・誤答回数の多い単語を挟み込むサドンデス出題キュー生成（多様性最大化）
+  const generateFeverQuizList = (candidateWords, statsData, count = 45, cooldownIds = []) => {
+    if (!candidateWords || candidateWords.length === 0) return [];
+
+    const cooldownSet = new Set(candidateWords.length >= 15 ? cooldownIds.slice(-25) : []);
+
+    // 各単語の危険度スコア（苦手度・誤答度）を計算しつつ、直近出題クールダウンを反映
+    const scored = candidateWords.map(w => {
+      const st = statsData?.[w.id] || { tested: 0, wrong: 0, streak: 0 };
+      const isRecent = cooldownSet.has(w.id);
+      const dangerScore = ((st.wrong || 0) * 10) +
+                          (st.streak === 0 && (st.tested || 0) > 0 ? 15 : 0) +
+                          (Math.max(0, 3 - (st.streak || 0)) * 3) +
+                          ((st.tested || 0) === 0 ? 4 : 0) -
+                          (isRecent ? 20 : 0);
+      return { ...w, dangerScore, isRecent };
+    });
+
+    // 危険度順にソートし、上位の苦手プールを作成
+    const sortedByDanger = [...scored].sort((a, b) => b.dangerScore - a.dangerScore);
+    const hardPool = sortedByDanger.filter(w => w.dangerScore >= 4);
+    const rawDangerCandidates = hardPool.length >= 3 ? hardPool : sortedByDanger.slice(0, Math.max(3, Math.ceil(sortedByDanger.length * 0.4)));
+
+    // ★重要：苦手候補リスト自体を Fisher-Yates でシャッフル！固定順序での出題を完全撤廃
+    const dangerCandidates = shuffleArray(rawDangerCandidates);
+
+    // 通常枠プールも直近クールダウンを考慮した上で Fisher-Yates シャッフル
+    const freshNormal = candidateWords.filter(w => !cooldownSet.has(w.id));
+    const normalPool = shuffleArray(freshNormal.length >= 10 ? freshNormal : candidateWords);
+
+    const result = [];
+    let dangerIdx = 0;
+    let normalIdx = 0;
+
+    // 2〜3問ごとのゆらぎ（ジッター: 2問または3問おき）で自然に難問を配置
+    let nextTrapAt = 2 + Math.floor(Math.random() * 2);
+
+    for (let i = 0; i < count; i++) {
+      if (i === nextTrapAt && dangerCandidates.length > 0) {
+        const trapWord = dangerCandidates[dangerIdx % dangerCandidates.length];
+        dangerIdx++;
+        result.push({
+          ...trapWord,
+          isFeverTrap: true,
+          isDueRevenge: false
+        });
+        nextTrapAt = i + 2 + Math.floor(Math.random() * 2);
+      } else {
+        const normalWord = normalPool[normalIdx % normalPool.length];
+        normalIdx++;
+        result.push({
+          ...normalWord,
+          isFeverTrap: false
+        });
+      }
+    }
+
+    return result;
+  };
+
   // クイズ開始
   const startQuiz = (mode = 'normal', customList = null) => {
     let pool = [];
@@ -19118,47 +19954,74 @@ function App() {
     const targetCount = sessionQuestionCount;
     if (customList) {
       pool = customList;
+    } else if (mode === 'fever') {
+      // フィーバーモード：直近クールダウンを考慮し、苦手単語もシャッフルして出題
+      pool = generateFeverQuizList(candidateWords, stats, 45, recentGlobalWordIds);
     } else if (mode === 'weak') {
       const dueBossWords = candidateWords.filter(w => getMasteryType(w.id) === 'survivor' && isReviewDue(w.id));
       const scored = candidateWords.map(w => {
         const st = stats[w.id] || { tested: 0, wrong: 0, streak: 0 };
         const isDue = dueBossWords.some(b => b.id === w.id);
-        const score = (st.wrong * 3) + (st.tested === 0 ? 5 : 0) + (isDue ? 10 : 0) + (3 - Math.min(st.streak, 3));
+        const isRecent = recentGlobalWordIds.slice(-15).includes(w.id);
+        const score = (st.wrong * 4) + (st.tested === 0 ? 5 : 0) + (isDue ? 12 : 0) + (3 - Math.min(st.streak, 3)) * 2 - (isRecent ? 10 : 0);
         return { ...w, priorityScore: score, isDueRevenge: isDue };
       });
       const weakPool = scored.filter(w => w.streak < 3 || w.wrong > 0 || w.isDueRevenge);
       const targetPool = weakPool.length >= targetCount ? weakPool : scored;
-      let picked = targetPool.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, targetCount);
-      while (picked.length < targetCount && candidateWords.length > 0) {
-        picked.push(...[...candidateWords].sort(() => Math.random() - 0.5));
-      }
-      pool = picked.slice(0, targetCount).sort(() => Math.random() - 0.5);
+      const sortedPool = [...targetPool].sort((a, b) => b.priorityScore - a.priorityScore);
+      let picked = sortedPool.slice(0, Math.min(sortedPool.length, targetCount * 2));
+      pool = shuffleArray(picked).slice(0, targetCount);
     } else {
-      const allDueBosses = candidateWords
-        .filter(w => getMasteryType(w.id) === 'survivor' && isReviewDue(w.id))
-        .map(w => ({ ...w, isDueRevenge: true }))
-        .sort(() => Math.random() - 0.5);
-      const maxBosses = Math.max(1, Math.min(allDueBosses.length, Math.floor(targetCount * 0.15) || 1));
+      // 通常モード：全単語が満遍なく循環する多様性最大化アルゴリズム
+      const cooldownSet = new Set(candidateWords.length >= targetCount * 2 ? recentGlobalWordIds.slice(-30) : []);
+
+      // 1. 忘却曲線復習ボス枠 (最大15%)
+      const allDueBosses = shuffleArray(
+        candidateWords.filter(w => getMasteryType(w.id) === 'survivor' && isReviewDue(w.id) && !cooldownSet.has(w.id))
+      ).map(w => ({ ...w, isDueRevenge: true }));
+      const maxBosses = Math.min(allDueBosses.length, Math.floor(targetCount * 0.15) || 1);
       const dueBossWords = allDueBosses.slice(0, maxBosses);
 
       const nonBosses = candidateWords.filter(w => !dueBossWords.some(b => b.id === w.id));
-      const scored = nonBosses.map(w => {
-        const st = stats[w.id] || { tested: 0, wrong: 0, streak: 0 };
-        const score = (st.wrong * 2) + (st.tested === 0 ? 3 : 0) + (3 - Math.min(st.streak, 3));
-        return { ...w, priorityScore: score };
-      });
-      const topCandidates = scored.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, Math.max(targetCount * 2, 20));
-      const neededNormal = Math.max(0, targetCount - dueBossWords.length);
-      let normalPicks = topCandidates.sort(() => Math.random() - 0.5).slice(0, neededNormal);
 
-      let combined = [...dueBossWords, ...normalPicks];
-      while (combined.length < targetCount && candidateWords.length > 0) {
-        combined.push(...[...candidateWords].sort(() => Math.random() - 0.5));
+      // 2. 未学習単語枠（まだ解いていない単語を発掘）
+      const unvisitedWords = shuffleArray(nonBosses.filter(w => (stats[w.id]?.tested || 0) === 0 && !cooldownSet.has(w.id)));
+
+      // 3. 復習・苦手単語枠（ミスありまたはストリーク不足）
+      const weakWords = shuffleArray(nonBosses.filter(w => (stats[w.id]?.tested || 0) > 0 && (stats[w.id]?.streak || 0) < 3 && !cooldownSet.has(w.id)));
+
+      // 4. 一般プール（その他の新鮮な単語）
+      const otherFresh = shuffleArray(nonBosses.filter(w => !cooldownSet.has(w.id)));
+
+      // 5. クールダウン済み単語（候補が足りない場合のフォールバック）
+      const fallbackWords = shuffleArray(nonBosses.filter(w => cooldownSet.has(w.id)));
+
+      const needed = targetCount - dueBossWords.length;
+      const countUnvisited = Math.min(unvisitedWords.length, Math.ceil(needed * 0.35));
+      const countWeak = Math.min(weakWords.length, Math.ceil(needed * 0.35));
+
+      const picks = [
+        ...unvisitedWords.slice(0, countUnvisited),
+        ...weakWords.slice(0, countWeak)
+      ];
+
+      const remainingNeeded = needed - picks.length;
+      const pickIds = new Set(picks.map(p => p.id));
+      const freshPool = otherFresh.filter(w => !pickIds.has(w.id));
+      picks.push(...freshPool.slice(0, remainingNeeded));
+
+      if (picks.length < needed) {
+        const stillNeeded = needed - picks.length;
+        const currentIds = new Set(picks.map(p => p.id));
+        const fallbacks = fallbackWords.filter(w => !currentIds.has(w.id));
+        picks.push(...fallbacks.slice(0, stillNeeded));
       }
-      pool = combined.slice(0, targetCount).sort(() => Math.random() - 0.5);
+
+      // ボスと通常単語を合体し、Fisher-Yates で完全シャッフル
+      pool = shuffleArray([...dueBossWords, ...picks]);
     }
 
-    const selected = mode === 'endless' ? pool.sort(() => Math.random() - 0.5) : pool;
+    const selected = (mode === 'endless') ? shuffleArray(pool) : pool;
     if (selected.length === 0) {
       alert('出題可能な単語がありません');
       return;
@@ -19166,6 +20029,15 @@ function App() {
 
     setIsWeakMode(mode === 'weak');
     setIsEndlessMode(mode === 'endless');
+    setIsFeverMode(mode === 'fever');
+    if (mode === 'fever') {
+      setIsHintMode(false);
+    }
+    const feverHeadstartLv = (mode === 'fever') ? (gameData.mpUpgrades?.feverHeadstartLv || 0) : 0;
+    const initialCombo = feverHeadstartLv * 3;
+    if (mode === 'fever') {
+      setCurrentSessionCombo(initialCombo);
+    }
     setQuizList(selected);
     setCurrentIndex(0);
     setInputVal('');
@@ -19184,8 +20056,9 @@ function App() {
     setCheatAlertMsg('');
     setToastNotice(null);
 
+    setFeverMilestone(null);
     const firstWord = selected[0];
-    const isBoss = !!firstWord?.isDueRevenge;
+    const isBoss = (mode !== 'fever') && !!firstWord?.isDueRevenge;
     setIsBossQuestion(isBoss);
     setShowBossIntro(isBoss);
 
@@ -19201,10 +20074,17 @@ function App() {
 
   // 次の問題へ
   const handleNextQuestion = useCallback(() => {
-    if (isEndlessMode) {
+    if (isFeverMode) {
+      // フィーバーモードは残りが少なくなったら苦手トラップ混じりのリストを補充
+      if (currentIndex + 5 >= quizList.length) {
+        const candidateWords = selectedLevel === 'ALL' ? words : words.filter(w => (w.level || 'デフォルト') === selectedLevel);
+        const refilled = generateFeverQuizList(candidateWords, stats, 30);
+        setQuizList(prev => [...prev, ...refilled]);
+      }
+    } else if (isEndlessMode) {
       if (currentIndex + 1 >= quizList.length) {
         const candidateWords = selectedLevel === 'ALL' ? words : words.filter(w => (w.level || 'デフォルト') === selectedLevel);
-        const refilled = [...candidateWords].sort(() => Math.random() - 0.5);
+        const refilled = shuffleArray(candidateWords);
         setQuizList(prev => [...prev, ...refilled]);
       }
     } else if (currentIndex + 1 >= sessionQuestionCount || currentIndex + 1 >= quizList.length) {
@@ -19213,9 +20093,10 @@ function App() {
       return;
     }
 
+    setFeverMilestone(null);
     const nextIndex = currentIndex + 1;
     const nextWord = quizList[nextIndex];
-    const isBoss = !!nextWord?.isDueRevenge;
+    const isBoss = !isFeverMode && !!nextWord?.isDueRevenge;
 
     setCurrentIndex(nextIndex);
     setInputVal('');
@@ -19307,7 +20188,9 @@ function App() {
 
     const isCorrect = checkAnswerCorrectness(trimmedInput, currentWord.word);
     const answerDuration = Date.now() - questionStartTime;
-    const speedBonusQualified = answerDuration <= 2500;
+    const hasInsight = !!gameData.mpUpgrades?.transcendentInsight;
+    const speedLimit = hasInsight ? 3000 : 2500;
+    const speedBonusQualified = answerDuration <= speedLimit;
     setIsSpeedBonus(speedBonusQualified);
 
     const isCheated = isCorrect && answerDuration < 600;
@@ -19318,6 +20201,13 @@ function App() {
     else setCheatAlertMsg('');
 
     setRecentAnsweredWordIds(prev => [...prev.slice(-4), currentWord.id]);
+    setRecentGlobalWordIds(prev => {
+      const updated = [...prev.slice(-40), currentWord.id];
+      try {
+        sessionStorage.setItem('spell_blaster_recent_global_words', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
     const prevStat = stats[currentWord.id] || { tested: 0, wrong: 0, streak: 0, reviewStep: 0, nextReviewDate: null };
     const oldStreak = prevStat.streak || 0;
@@ -19334,7 +20224,33 @@ function App() {
     }
 
     let calculatedCombo = currentSessionCombo;
-    if (isCorrect) {
+    if (isFeverMode) {
+      if (isCorrect && !isCheated) {
+        calculatedCombo = currentSessionCombo + 1;
+        setCurrentSessionCombo(calculatedCombo);
+        setGameData(p => ({
+          ...p,
+          maxFeverCombo: Math.max(p.maxFeverCombo || 0, calculatedCombo)
+        }));
+        
+        // 10問ごとの派手なフィーバー節目サウンド (10, 20, 30, 40, 50...)
+        if (calculatedCombo > 0 && calculatedCombo % 10 === 0) {
+          SoundFX.vibrate([150, 80, 150, 80, 400]);
+          SoundFX.playJackpot();
+          SoundFX.playMastered();
+        } else {
+          const feverP = getFeverPhase(calculatedCombo);
+          if (calculatedCombo === 5 || calculatedCombo === 25 || calculatedCombo === 50) {
+            SoundFX.playFeverUp(feverP);
+          }
+        }
+      } else {
+        // フィーバーモードはサドンデス（シールドによる救済なし、即終了）
+        shieldSaved = false;
+        calculatedCombo = 0;
+        setCurrentSessionCombo(0);
+      }
+    } else if (isCorrect) {
       if (!isCheated && !isRepeatedFarm) {
         calculatedCombo = currentSessionCombo + 1;
         setCurrentSessionCombo(calculatedCombo);
@@ -19358,45 +20274,98 @@ function App() {
       isBoss: isBossQuestion,
       justMastered,
       isAlreadyMastered,
+      isFeverMode,
+      feverCombo: calculatedCombo,
       currentCombo: calculatedCombo,
       isSpeedBonus: speedBonusQualified,
       isCheated,
       isRepeatedFarm,
-      isHintMode,
+      isHintMode: isFeverMode ? false : isHintMode,
       dailyOverdriveMultiplier: dailyTier.multiplier,
-      upgrades: gameData.upgrades
+      upgrades: { ...gameData.upgrades, ...(gameData.mpUpgrades || {}) }
     });
 
-    const earnedSP = rewardResult.earnedSP;
+    let earnedSP = rewardResult.earnedSP;
+    if (isGoldenCard) earnedSP *= 3;
+    if (alchemyBonusSP > 0) earnedSP += alchemyBonusSP;
     const isJackpot = rewardResult.isJackpot;
     const isCritical = rewardResult.isCritical;
+
+    // 10問ごとの派手なフィーバー節目モーダル演出！
+    if (isFeverMode && isCorrect && !isCheated && calculatedCombo > 0 && calculatedCombo % 10 === 0) {
+      setFeverMilestone({
+        combo: calculatedCombo,
+        multiplier: rewardResult.feverModeMultiplier
+      });
+    }
 
     setEarnedGoldThisTurn(earnedSP);
     setTurnRewardDetail(rewardResult);
 
-    if (earnedSP > 0) {
-      setSessionEarnedGold(prev => prev + earnedSP);
+    // ★ 1800単語スケール対応！MP (Mastery Points) 超ワクワク計算
+    const isMasterHit = isCorrect && !isCheated && (isAlreadyMastered || justMastered);
+    let earnedMP = 0;
+    let isGoldenCard = false;
+    if (isMasterHit) {
+      // 基礎5 MP + スピードボーナス(+5 MP) + 新規マスター祝賀(+50 MP)
+      earnedMP = 5;
+      if (speedBonusQualified) earnedMP += 5;
+      if (justMastered) earnedMP += 50;
+
+      // フィーバーモード高連勝ボーナス（連勝するほどMPが跳ね上がる！）
+      if (isFeverMode) {
+        if (calculatedCombo >= 100) earnedMP += 100;
+        else if (calculatedCombo >= 50) earnedMP += 50;
+        else if (calculatedCombo >= 25) earnedMP += 25;
+        else if (calculatedCombo >= 10) earnedMP += 10;
+      }
+
+      // 黄金単語覚醒マトリクス判定 (確率でSP・MPが3倍！)
+      const goldenLv = gameData.mpUpgrades?.goldenCardTransformLv || 0;
+      if (goldenLv > 0 && Math.random() < (goldenLv * 0.10)) {
+        isGoldenCard = true;
+        earnedMP *= 3;
+      }
+    }
+
+    // 電脳錬金マトリクス (獲得MPに応じて純金SPがダイレクト噴出！)
+    const alchemyLv = gameData.mpUpgrades?.cyberAlchemyLv || 0;
+    let alchemyBonusSP = 0;
+    if (alchemyLv > 0 && earnedMP > 0) {
+      alchemyBonusSP = earnedMP * alchemyLv * 1500;
+    }
+
+    if (earnedSP > 0 || earnedMP > 0) {
+      if (earnedSP > 0) setSessionEarnedGold(prev => prev + earnedSP);
       setGameData(prev => ({
         ...prev,
         gold: (prev.gold || 0) + earnedSP,
         totalEarned: (prev.totalEarned || 0) + earnedSP,
+        mp: (prev.mp || 0) + earnedMP,
+        totalEarnedMP: (prev.totalEarnedMP || 0) + earnedMP,
         totalCorrectAllTime: isCorrect ? (prev.totalCorrectAllTime || 0) + 1 : prev.totalCorrectAllTime,
         totalBossKills: (isCorrect && isBossQuestion) ? (prev.totalBossKills || 0) + 1 : prev.totalBossKills,
         totalJackpots: isJackpot ? (prev.totalJackpots || 0) + 1 : (prev.totalJackpots || 0)
       }));
 
+      const goldText = isGoldenCard ? ' 💎【GOLDEN CARD 3倍!!】' : '';
+      const alchemyText = alchemyBonusSP > 0 ? ` (+${formatScore(alchemyBonusSP)} 錬金SP)` : '';
+      const mpSuffix = earnedMP > 0 ? ` 👑 +${earnedMP} MP!${goldText}${alchemyText}` : '';
+
       if (justMastered) {
-        setToastNotice(`👑 WORD MASTERED! 単語【${currentWord.word}】完全習得! +${formatScore(earnedSP)} SP!`);
+        setToastNotice(`👑 WORD MASTERED! 単語【${currentWord.word}】完全習得! +${formatScore(earnedSP)} SP!${mpSuffix}`);
+      } else if (isFeverMode) {
+        setToastNotice(`🔥 FEVER ${calculatedCombo}連勝! +${formatScore(earnedSP)} SP (×${rewardResult.feverModeMultiplier}倍)${mpSuffix}`);
       } else if (isJackpot) {
-        setToastNotice(`🎰 JACKPOT ×${rewardResult.jackpotMult}!! +${formatScore(earnedSP)} SP!${isHintMode ? ' (HINT -75%)' : rewardResult.isAlreadyMastered ? ' (習得済復習 -80%)' : ''}`);
+        setToastNotice(`🎰 JACKPOT ×${rewardResult.jackpotMult}!! +${formatScore(earnedSP)} SP!${mpSuffix}`);
       } else if (isCritical) {
-        setToastNotice(`💥 CRITICAL! +${formatScore(earnedSP)} SP!${isHintMode ? ' (HINT -75%)' : rewardResult.isAlreadyMastered ? ' (習得済復習 -80%)' : ''}`);
+        setToastNotice(`💥 CRITICAL! +${formatScore(earnedSP)} SP!${mpSuffix}`);
       } else if (isHintMode) {
-        setToastNotice(`+${formatScore(earnedSP)} SP (HINT -75%)`);
+        setToastNotice(`+${formatScore(earnedSP)} SP (HINT -75%)${mpSuffix}`);
       } else if (rewardResult.isAlreadyMastered) {
-        setToastNotice(`+${formatScore(earnedSP)} SP (習得済復習 -80%)`);
+        setToastNotice(`+${formatScore(earnedSP)} SP (習得済復習)${mpSuffix}`);
       } else {
-        setToastNotice(`+${formatScore(earnedSP)} SP!`);
+        setToastNotice(`+${formatScore(earnedSP)} SP!${mpSuffix}`);
       }
     }
 
@@ -19682,6 +20651,10 @@ function App() {
                 currentIndex={currentIndex}
                 sessionQuestionCount={sessionQuestionCount}
                 isEndlessMode={isEndlessMode}
+                isFeverMode={isFeverMode}
+                feverMilestone={feverMilestone}
+                setFeverMilestone={setFeverMilestone}
+                gameData={gameData}
                 isBossQuestion={isBossQuestion}
                 showBossIntro={showBossIntro}
                 toastNotice={toastNotice}
@@ -19738,6 +20711,8 @@ function App() {
                 upgrades={gameData.upgrades}
                 isReviewCompleted={isReviewCompleted}
                 isEndlessMode={isEndlessMode}
+                isFeverMode={isFeverMode}
+                gameData={gameData}
                 isWeakMode={isWeakMode}
                 toastNotice={toastNotice}
                 startReview={startReview}
@@ -19891,8 +20866,57 @@ function App() {
 }
 
 
-    // Mount App to DOM
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // Error Boundary & Mount App to DOM
+    class RootErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null, info: null };
+      }
+      static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+      }
+      componentDidCatch(error, info) {
+        this.setState({ info });
+        if (window.showDebugError) {
+          window.showDebugError('REACT RENDER ERROR', (error ? error.message : String(error)), (info ? info.componentStack : ''));
+        }
+      }
+      render() {
+        if (this.state.hasError) {
+          return (
+            <div style={{ padding: 24, color: '#fca5a5', background: '#0a0d1e', minHeight: '100vh', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 22, fontWeight: 'bold', color: '#ef4444', marginBottom: 8 }}>⚠️ 描画エラーが発生しました</div>
+              <p style={{ color: '#cbd5e1', fontSize: 13, marginBottom: 12 }}>コンポーネントの実行中に例外が検出されました。</p>
+              <pre style={{ background: '#1e1b4b', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto', border: '1px solid #4338ca' }}>
+                {this.state.error ? this.state.error.stack || this.state.error.message : String(this.state.error)}
+                {this.state.info ? '\n' + this.state.info.componentStack : ''}
+              </pre>
+              <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => location.reload()}
+                  style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  再読み込み
+                </button>
+                <button
+                  onClick={() => { if (confirm('キャッシュをクリアして再起動しますか？')) { localStorage.removeItem('spell_blaster_game_progress'); location.reload(); } }}
+                  style={{ padding: '8px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  進行データを修復リセット
+                </button>
+              </div>
+            </div>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <RootErrorBoundary>
+        <App />
+      </RootErrorBoundary>
+    );
     
   </script>
 </body>
