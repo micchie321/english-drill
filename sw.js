@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spell-blaster-v1';
+const CACHE_NAME = 'spell-blaster-b4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -37,6 +37,14 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  // ネイティブアプリ（Capacitor等）のリクエストはキャッシュを完全バイパス
+  if (!e.request.url.startsWith('http:') && !e.request.url.startsWith('https:')) {
+    return;
+  }
+  if (e.request.url.includes('localhost') && !e.request.url.includes('8000')) {
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
