@@ -221,9 +221,9 @@ input:focus { outline: none; }
  * 自動生成されたバージョン情報ファイル (build.py により自動更新)
  */
 const APP_VERSION = 'v1.2.1';
-const BUILD_NUMBER = 19;
-const BUILD_DATE = '2026-11-12 00:44';
-const FULL_VERSION_STRING = 'v1.2.1 (Build 19)';
+const BUILD_NUMBER = 24;
+const BUILD_DATE = '2026-11-12 01:08';
+const FULL_VERSION_STRING = 'v1.2.1 (Build 24)';
 
     // ===== src/constants/vocabulary.js =====
 const DEFAULT_VOCABULARY = [
@@ -16039,18 +16039,21 @@ const getLevelMultiplier = (level) => {
 const calculateReward = ({
   isCorrect,
   isBoss,
-  justMastered,
+  justMastered = false,
   isAlreadyMastered = false,
   isFeverMode = false,
   feverCombo = 0,
-  currentCombo,
-  isSpeedBonus,
-  isCheated,
-  isRepeatedFarm,
-  isHintMode,
+  currentCombo = 0,
+  speedBonusQualified = false,
+  isSpeedBonus = false,
+  isCheated = false,
+  isRepeatedFarm = false,
+  isHintMode = false,
   dailyOverdriveMultiplier = 1.0,
   levelMultiplier = 1.0,
   isNewWord = false,
+  dailyStepUpMultiplier = 1.0,
+  isQuestBurst = false,
   upgrades = {}
 }) => {
   if (!isCorrect || isCheated) {
@@ -16171,8 +16174,8 @@ const calculateReward = ({
     sp *= feverModeMultiplier;
   }
 
-  // 11. 連続ファームペナルティ
-  if (isRepeatedFarm) sp *= 0.1;
+  // 11. 連続ファームペナルティ (完全撤廃)
+  // if (isRepeatedFarm) sp *= 0.1;
 
   const rawSP = Math.max(1, Math.round(sp));
 
@@ -17026,7 +17029,7 @@ const MenuScreen = ({
         </div>
       </div>
 
-      {/* 3.5 デイリーステップアップ指令 (Level 2 挑戦を自然に促すデイリー倍率クエスト) */}
+      {/* 3.5 デイリーステップアップ指令 (Level 2 10問パーフェクトで終日2倍解放！何回でも挑戦可能) */}
       <div className={`rounded-2xl p-2.5 mb-2 shadow-sm font-mono text-left transition-all ${
         todayLog.stepUpClaimed
           ? 'bg-gradient-to-r from-emerald-950/70 via-slate-900 to-cyan-950/70 border-2 border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
@@ -17035,15 +17038,15 @@ const MenuScreen = ({
         <div className="flex items-center justify-between mb-1">
           <span className="text-[9px] font-bold text-amber-300 flex items-center gap-1">
             <span>🎯</span>
-            <span>DAILY STEP-UP QUEST</span>
+            <span>DAILY STEP-UP QUEST (10問パーフェクト)</span>
           </span>
           {todayLog.stepUpClaimed ? (
             <span className="text-[8px] bg-emerald-950 text-emerald-300 border border-emerald-400 px-1.5 py-0.2 rounded font-black flex items-center gap-0.5 shadow animate-pulse">
-              <span>⚡ OVERDRIVE ACTIVATED (SP ×2.0倍 発動中!)</span>
+              <span>⚡ PERFECT OVERDRIVE (本日 SP ×2.0倍 発動中!)</span>
             </span>
           ) : (
             <span className="text-[8px] bg-indigo-950 text-indigo-300 border border-indigo-500/50 px-1.5 py-0.2 rounded font-bold">
-              進捗: {Math.min(3, todayLog.stepUpCleared || 0)} / 3問
+              本日最高: {Math.min(10, todayLog.stepUpBestScore || 0)} / 10問正解
             </span>
           )}
         </div>
@@ -17053,16 +17056,17 @@ const MenuScreen = ({
             {todayLog.stepUpClaimed ? (
               <div>
                 <div className="text-emerald-300 font-black flex items-center gap-1">
-                  <span>🔥 本日終日 全問題 SP ×2.0倍 適用中！</span>
+                  <span>🔥 10問パーフェクト達成済み！ 本日終日 全問題 SP ×2.0倍 適用中！</span>
                 </div>
                 <div className="text-[8px] text-cyan-300/90 font-bold">セット完了ボーナスも ×1.5倍 強化発動中！</div>
               </div>
             ) : (
               <div>
-                <div>Level 2 の単語を <strong>3問クリア</strong> せよ！</div>
-                <div className="text-[8px] text-amber-300/90 font-bold">
-                  報酬: 💥 達成問 <strong className="text-yellow-300 font-black">SP ×25倍 BURST</strong> ＆ 🔥 本日終日 <strong className="text-cyan-300 font-black">SP ×2.0倍</strong>
+                <div>Level 2 で <strong className="text-amber-300 font-black">【10問パーフェクト (全問正解)】</strong> を達成せよ！</div>
+                <div className="text-[8px] text-slate-300/90 font-bold mt-0.5">
+                  報酬: 🔥 本日終日 <strong className="text-cyan-300 font-black">全問 SP ×2.0倍 OVERDRIVE</strong> ＆ 👑 <strong className="text-amber-300 font-black">+500 MP</strong>
                 </div>
+                <div className="text-[7px] text-amber-400/80">※ヒント強制無効 / パーフェクト達成まで本日何度でも挑戦可能！</div>
               </div>
             )}
           </div>
@@ -17071,25 +17075,26 @@ const MenuScreen = ({
               type="button"
               onClick={() => {
                 setSelectedLevel('Level 2');
-                startQuiz('normal');
+                if (setSessionQuestionCount) setSessionQuestionCount(10);
+                startQuiz('stepup');
               }}
               className="bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-black text-[9px] font-black px-2.5 py-1.5 rounded-lg active:scale-95 shadow transition-all flex items-center gap-0.5 whitespace-nowrap"
             >
-              <span>挑戦する</span>
+              <span>挑む (10問)</span>
               <span>⚡</span>
             </button>
           )}
         </div>
 
-        {/* プログレスバー */}
+        {/* プログレスバー (本日最高正解数 / 10) */}
         <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-slate-800">
           <div
             className={`h-full transition-all duration-500 ${
               todayLog.stepUpClaimed
                 ? 'bg-gradient-to-r from-emerald-400 to-cyan-400'
-                : 'bg-gradient-to-r from-indigo-500 to-cyan-400'
+                : 'bg-gradient-to-r from-indigo-500 to-amber-400'
             }`}
-            style={{ width: `${Math.min(100, (((todayLog.stepUpCleared || 0)) / 3) * 100)}%` }}
+            style={{ width: `${Math.min(100, (((todayLog.stepUpClaimed ? 10 : (todayLog.stepUpBestScore || 0))) / 10) * 100)}%` }}
           />
         </div>
       </div>
@@ -17385,6 +17390,7 @@ const QuizScreen = ({
   isEndlessMode,
   isFeverMode,
   isWeakMode,
+  isStepUpMode = false,
   feverMilestone,
   setFeverMilestone,
   gameData = {},
@@ -17426,19 +17432,21 @@ const QuizScreen = ({
     keystrokeCountRef.current = 0;
   }, [currentIndex]);
 
-  // 不正解時にEnterキーで即座に次へ進めるグローバルリスナー & ボタンフォーカス
+  // 回答確定後（正解・不正解問わず）Enterキーで即座に次へ進めるグローバルリスナー & ボタンフォーカス
   useEffect(() => {
-    if (answerStatus !== 'incorrect') return;
+    if (answerStatus === null) return;
     
-    // NEXTボタンに自動フォーカス
-    const timer = setTimeout(() => {
-      nextBtnRef.current?.focus();
-    }, 50);
+    let timer = null;
+    if (answerStatus === 'incorrect') {
+      timer = setTimeout(() => {
+        nextBtnRef.current?.focus();
+      }, 50);
+    }
 
     const handleGlobalKeyDown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (isFeverMode) {
+        if (answerStatus === 'incorrect' && isFeverMode) {
           setScreen('result');
         } else {
           handleNextQuestion();
@@ -17447,10 +17455,10 @@ const QuizScreen = ({
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [answerStatus, handleNextQuestion]);
+  }, [answerStatus, handleNextQuestion, isFeverMode]);
 
   const totalQuestions = isEndlessMode ? quizList.length : (sessionQuestionCount || quizList.length);
   const progressPercent = Math.min(100, Math.round(((currentIndex + 1) / totalQuestions) * 100));
@@ -17563,10 +17571,14 @@ const QuizScreen = ({
             ⏹ QUIT
           </button>
           <div className="flex items-center gap-2 font-mono">
-            {/* ヒントトグルボタン (フィーバーモードでは完全使用不可) */}
+            {/* ヒントトグルボタン (フィーバーモードおよびステップアップクエストでは完全使用不可) */}
             {isFeverMode ? (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded border border-slate-800 bg-slate-900/60 text-[10px] font-bold text-slate-500 select-none">
                 <span>🚫 NO HINT</span>
+              </span>
+            ) : isStepUpMode ? (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded border border-amber-500/60 bg-amber-950/60 text-[10px] font-black text-amber-300 select-none" title="ステップアップクエストはパーフェクト判定のためヒント強制無効です">
+                <span>🎯 NO HINT (QUEST)</span>
               </span>
             ) : (
               <button
@@ -17704,8 +17716,8 @@ const QuizScreen = ({
           )}
         </div>
 
-        {/* ヒントモード時のお手本スペル (和文を邪魔しない落ち着いたサイバーHUDアシスト) */}
-        {!isFeverMode && isHintMode && answerStatus === null && (
+        {/* ヒントモード時のお手本スペル (フィーバーおよびステップアップクエスト時は強制非表示) */}
+        {!isFeverMode && !isStepUpMode && isHintMode && answerStatus === null && (
           <div className="mt-3 bg-slate-900/90 border border-slate-700/60 rounded-2xl py-2 px-3 text-center shadow-inner">
             <div className="text-[8px] font-mono font-bold tracking-wider text-amber-400 uppercase mb-0.5 flex items-center justify-center gap-1.5 flex-wrap">
               <span>👁️ SPELL GUIDE</span>
@@ -17980,7 +17992,7 @@ const QuizScreen = ({
               CHECK (ENTER)
             </button>
           ) : (
-            answerStatus === 'incorrect' && (
+            answerStatus === 'incorrect' ? (
               isFeverMode ? (
                 <button
                   ref={nextBtnRef}
@@ -18002,6 +18014,14 @@ const QuizScreen = ({
                   NEXT ▶ (ENTER)
                 </button>
               )
+            ) : (
+              <button
+                type="button"
+                onClick={handleNextQuestion}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm font-mono tracking-wider mt-2 pop-in animate-pulse"
+              >
+                NEXT ▶ (ENTER / 0.5秒後に自動進行)
+              </button>
             )
           )}
         </form>
@@ -18394,6 +18414,48 @@ const ResultScreen = ({
             </div>
           </>
         )}
+        {/* Level 2 デイリークエスト挑戦リザルトバナー */}
+        {!isFeverMode && (selectedLevel === 'Level 2' || selectedLevel === 'Level ２') && total >= 10 && (
+          <div className="mb-2.5">
+            {scorePercent === 100 ? (
+              <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 border-2 border-emerald-400 rounded-2xl p-2.5 shadow-[0_0_20px_rgba(16,185,129,0.5)] font-mono text-left animate-popIn">
+                <div className="flex items-center justify-between text-xs font-black text-emerald-300 mb-0.5">
+                  <span className="flex items-center gap-1">
+                    <span>🎯</span>
+                    <span>DAILY QUEST COMPLETE!!</span>
+                  </span>
+                  <span className="bg-emerald-400 text-black px-1.5 py-0.2 rounded text-[9px] font-black">
+                    10/10 PERFECT
+                  </span>
+                </div>
+                <div className="text-[11px] font-bold text-white">
+                  🔥 本日終日 <strong className="text-cyan-300">全問題 SP ×2.0倍 OVERDRIVE</strong> 解放！
+                </div>
+                <div className="text-[8px] text-emerald-300/80 mt-0.5">
+                  👑 +500 MP ＆ クエスト達成ボーナス獲得済み！本日はずっとSPが2倍です！
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-900/90 border border-indigo-500/50 rounded-2xl p-2 text-left font-mono">
+                <div className="flex items-center justify-between text-[10px] text-amber-300 font-bold mb-0.5">
+                  <span>🎯 デイリークエスト (終日2倍) まで あと{total - correctCount}問！</span>
+                  <span className="text-[8px] text-slate-400">{correctCount} / 10問</span>
+                </div>
+                <div className="text-[9px] text-slate-300 flex items-center justify-between gap-2">
+                  <span>10問パーフェクトで本日終日 SP 2倍！何度でも挑戦できます！</span>
+                  <button
+                    type="button"
+                    onClick={() => startQuiz('stepup')}
+                    className="bg-gradient-to-r from-amber-500 to-cyan-500 text-black font-black text-[9px] px-2 py-1 rounded-lg whitespace-nowrap active:scale-95 shadow"
+                  >
+                    再挑戦 ⚡
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {newlyMasteredWords.length > 0 && (
           <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-950/80 via-yellow-950/60 to-amber-950/80 border border-amber-400/80 rounded-xl px-3 py-1 mb-2 font-mono text-xs text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.35)] animate-pulse">
             <span className="text-sm">👑</span>
@@ -18528,7 +18590,7 @@ const ResultScreen = ({
           </button>
         ) : !isEndlessMode && (
           <button
-            onClick={() => startQuiz('normal')}
+            onClick={() => startQuiz('stepup')}
             className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3 rounded-2xl shadow-lg text-xs font-mono mb-2 active:scale-95 transition-all flex items-center justify-center gap-1.5"
           >
             <span>⚡ すぐに次のセットへ</span>
@@ -20497,6 +20559,7 @@ function App() {
   const [isWeakMode, setIsWeakMode] = useState(false);
   const [isEndlessMode, setIsEndlessMode] = useState(false);
   const [isFeverMode, setIsFeverMode] = useState(false);
+  const [isStepUpMode, setIsStepUpMode] = useState(false);
   const [challengeShieldAvailable, setChallengeShieldAvailable] = useState(false);
   const [feverImmortalityUsesLeft, setFeverImmortalityUsesLeft] = useState(0);
   const [feverMilestone, setFeverMilestone] = useState(null);
@@ -20619,31 +20682,63 @@ function App() {
         }
       }
 
+      const todayStr = getLocalDateStr();
+      const isLevel2 = (selectedLevel === 'Level 2' || selectedLevel === 'Level ２');
+      const is10Questions = sessionResults.length >= 10;
+      const isPerfect = scorePercent === 100;
+      const isStepUpActive = !!dailyLogs[todayStr]?.stepUpClaimed;
+      let questJustCompleted = false;
+
+      // 🎯 デイリーステップアップ判定: Level 2 で 10問パーフェクト達成で終日2倍解放！何度でも挑戦可能
+      if (isLevel2 && is10Questions && isPerfect && !isStepUpActive) {
+        questJustCompleted = true;
+        SoundFX.playJackpot();
+        cyberEffects.mastery();
+        SoundFX.vibrate([100, 50, 100, 50, 400]);
+
+        const questBonusSP = Math.max(50000, sessionEarnedGold);
+        setGameData(p => ({
+          ...p,
+          gold: (p.gold || 0) + questBonusSP,
+          totalEarned: (p.totalEarned || 0) + questBonusSP,
+          mp: (p.mp || 0) + 500,
+          totalEarnedMP: (p.totalEarnedMP || 0) + 500
+        }));
+
+        setToastNotice(`🎯 10問パーフェクト達成!! 【本日終日 全獲得SP ×2.0倍 OVERDRIVE 解放!!】👑 +500 MP ＆ 🎁 +${formatScore(questBonusSP)} SP!`);
+        setTimeout(() => setToastNotice(null), 5000);
+      }
+
       // セット完了クリアボーナスの付与 (エンドレス以外)
       if (!isEndlessMode) {
-        const isStepUpActive = !!dailyLogs[todayStr]?.stepUpClaimed;
-        const clearBonusRes = calculateClearBonus(sessionResults.length, correctCount, gameData.upgrades, sessionEarnedGold, selectedLevel, isStepUpActive);
+        const activeOverdrive = isStepUpActive || questJustCompleted;
+        const clearBonusRes = calculateClearBonus(sessionResults.length, correctCount, gameData.upgrades, sessionEarnedGold, selectedLevel, activeOverdrive);
         if (clearBonusRes.totalBonus > 0) {
           setGameData(p => ({
             ...p,
             gold: (p.gold || 0) + clearBonusRes.totalBonus,
             totalEarned: (p.totalEarned || 0) + clearBonusRes.totalBonus
           }));
-          setToastNotice(`🎉 CLEAR BONUS! +${formatScore(clearBonusRes.totalBonus)} SP!`);
-          setTimeout(() => setToastNotice(null), 3000);
+          if (!questJustCompleted) {
+            setToastNotice(`🎉 CLEAR BONUS! +${formatScore(clearBonusRes.totalBonus)} SP!`);
+            setTimeout(() => setToastNotice(null), 3000);
+          }
         }
       }
 
       const sessionMaxCombo = maxEndlessCombo || currentSessionCombo;
-      const todayStr = getLocalDateStr();
       setDailyLogs(prev => {
         const currentDaily = prev[todayStr] || { answered: 0, correct: 0, earnedGold: 0 };
+        const newBest = isLevel2 ? Math.max(currentDaily.stepUpBestScore || 0, correctCount) : (currentDaily.stepUpBestScore || 0);
         return {
           ...prev,
           [todayStr]: {
+            ...currentDaily,
             answered: currentDaily.answered + sessionResults.length,
             correct: currentDaily.correct + correctCount,
-            earnedGold: currentDaily.earnedGold + sessionEarnedGold
+            earnedGold: currentDaily.earnedGold + sessionEarnedGold,
+            stepUpBestScore: newBest,
+            stepUpClaimed: currentDaily.stepUpClaimed || questJustCompleted
           }
         };
       });
@@ -20945,9 +21040,11 @@ function App() {
     setIsWeakMode(mode === 'weak');
     setIsEndlessMode(mode === 'endless');
     setIsFeverMode(mode === 'fever');
+    setIsStepUpMode(mode === 'stepup');
     setChallengeShieldAvailable(selectedLevel !== 'Level 1');
     setFeverImmortalityUsesLeft((mode === 'fever') ? (gameData.upgrades?.feverImmortalityLv || 0) : 0);
-    if (mode === 'fever') {
+    // フィーバーモード及びデイリーステップアップクエストはヒント強制無効！
+    if (mode === 'fever' || mode === 'stepup') {
       setIsHintMode(false);
     }
     const feverHeadstartLv = (mode === 'fever') ? (gameData.mpUpgrades?.feverHeadstartLv || 0) : 0;
@@ -21095,12 +21192,12 @@ function App() {
 
   // 解答提出
   const handleSubmitAnswer = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (answerStatus !== null) return;
     const currentWord = quizList[currentIndex];
     if (!currentWord) return;
 
-    const trimmedInput = inputVal.trim();
+    const trimmedInput = (inputVal || '').trim();
     if (!trimmedInput) return;
 
     const isCorrect = checkAnswerCorrectness(trimmedInput, currentWord.word);
@@ -21111,10 +21208,9 @@ function App() {
     setIsSpeedBonus(speedBonusQualified);
 
     const isCheated = isCorrect && answerDuration < 600;
-    const isRepeatedFarm = recentAnsweredWordIds.slice(-2).includes(currentWord.id);
+    const isRepeatedFarm = false; // 連続出題ペナルティは完全撤廃（学習反復を正当評価）
 
     if (isCheated) setCheatAlertMsg('⚠️ 即答検知: SP加算&ストリーク無効');
-    else if (isRepeatedFarm) setCheatAlertMsg('⚠️ 連続出題ペナルティ (-90% SP)');
     else setCheatAlertMsg('');
 
     setRecentAnsweredWordIds(prev => [...prev.slice(-4), currentWord.id]);
@@ -21208,38 +21304,22 @@ function App() {
     const isNewWord = (prevStat.tested || 0) === 0 || ((prevStat.streak || 0) === 0 && (prevStat.repetition || 0) === 0);
     const levelMultiplier = getLevelMultiplier(currentWord.level || selectedLevel);
 
-    // デイリーステップアップ指令判定 (Level 2 を 3問クリアで特大倍率解放！)
+    // デイリーステップアップ判定 (Level 2 10問パーフェクトで終日2倍！何回でも挑戦可能)
     const curDaily = dailyLogs[todayStr] || { answered: 0, correct: 0, earnedGold: 0 };
     const isStepUpActive = !!curDaily.stepUpClaimed;
     const isLevel2Question = (currentWord.level === 'Level 2' || currentWord.level === 'Level ２' || selectedLevel === 'Level 2');
-    let questJustCompleted = false;
 
-    if (isCorrect && !isCheated && isLevel2Question) {
-      const newCleared = (curDaily.stepUpCleared || 0) + 1;
-      if (!isStepUpActive && newCleared >= 3) {
-        questJustCompleted = true;
-      }
-      setDailyLogs(prev => {
-        const cur = prev[todayStr] || { answered: 0, correct: 0, earnedGold: 0 };
-        return {
-          ...prev,
-          [todayStr]: {
-            ...cur,
-            stepUpCleared: newCleared,
-            stepUpClaimed: isStepUpActive || questJustCompleted
-          }
-        };
-      });
-    }
+    // 10問セットで9問連続正解し、迎えた最後の10問目正解の瞬間 -> パーフェクト決定弾として特大×25倍BURST発動！
+    const is10thPerfectHit = isCorrect && !isCheated && isLevel2Question && !isStepUpActive && (currentIndex === 9) && (calculatedCombo >= 9);
 
-    if (questJustCompleted) {
+    if (is10thPerfectHit) {
       SoundFX.playJackpot();
       cyberEffects.chest('giga');
       SoundFX.vibrate([100, 50, 100, 50, 300]);
     }
 
-    // 獲得報酬計算 (デイリーステップアップ: 達成問は特大×25.0倍BURST、達成後は本日終日×2.0倍OVERDRIVE)
-    const dailyStepUpMultiplier = (isStepUpActive || questJustCompleted) ? 2.0 : 1.0;
+    // 獲得報酬計算 (達成後は終日全問×2.0倍OVERDRIVE、10問目パーフェクト弾は×25.0倍BURST)
+    const dailyStepUpMultiplier = isStepUpActive ? 2.0 : 1.0;
     const rewardResult = calculateReward({
       isCorrect,
       isBoss: isBossQuestion,
@@ -21256,7 +21336,7 @@ function App() {
       levelMultiplier,
       isNewWord,
       dailyStepUpMultiplier,
-      isQuestBurst: questJustCompleted,
+      isQuestBurst: is10thPerfectHit,
       upgrades: { ...gameData.upgrades, ...(gameData.mpUpgrades || {}), totalSacrificedSP: gameData.totalSacrificedSP || 0 }
     });
 
@@ -21293,7 +21373,7 @@ function App() {
     }
 
     // デイリーステップアップ達成ボーナス (👑 +500 MP ＆ 既存獲得MP 5倍！)
-    if (questJustCompleted) {
+    if (is10thPerfectHit) {
       earnedMP = (earnedMP > 0 ? earnedMP * 5 : 50) + 500;
     }
 
@@ -21338,8 +21418,8 @@ function App() {
       const alchemyText = alchemyBonusSP > 0 ? ` (+${formatScore(alchemyBonusSP)} 錬金SP)` : '';
       const mpSuffix = earnedMP > 0 ? ` 👑 +${earnedMP} MP!${goldText}${alchemyText}` : '';
 
-      if (questJustCompleted) {
-        setToastNotice(`🎯 DAILY QUEST COMPLETE!! 【達成問 SP ×25.0倍 BURST (+${formatScore(earnedSP)} SP)】＆【終日 全獲得SP ×2.0倍 OVERDRIVE 解放!!】${mpSuffix}`);
+      if (is10thPerfectHit) {
+        setToastNotice(`🎯 10問連続正解達成!! 【パーフェクト弾 SP ×25.0倍 BURST (+${formatScore(earnedSP)} SP)】${mpSuffix}`);
       } else if (challengeShieldUsed) {
         setToastNotice(`🛡️ CHALLENGE SHIELD 発動！新難易度挑戦のためコンボを守りました！`);
       } else if (rewardResult.isNewWordBonus) {
@@ -21439,7 +21519,7 @@ function App() {
       clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         handleNextQuestion();
-      }, 700);
+      }, 500);
     }
   };
 
@@ -21645,6 +21725,7 @@ function App() {
                 isEndlessMode={isEndlessMode}
                 isFeverMode={isFeverMode}
                 isWeakMode={isWeakMode}
+                isStepUpMode={isStepUpMode}
                 feverMilestone={feverMilestone}
                 setFeverMilestone={setFeverMilestone}
                 gameData={gameData}
