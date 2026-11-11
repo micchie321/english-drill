@@ -221,9 +221,9 @@ input:focus { outline: none; }
  * 自動生成されたバージョン情報ファイル (build.py により自動更新)
  */
 const APP_VERSION = 'v1.2.1';
-const BUILD_NUMBER = 11;
-const BUILD_DATE = '2026-11-11 23:45';
-const FULL_VERSION_STRING = 'v1.2.1 (Build 11)';
+const BUILD_NUMBER = 13;
+const BUILD_DATE = '2026-11-12 00:09';
+const FULL_VERSION_STRING = 'v1.2.1 (Build 13)';
 
     // ===== src/constants/vocabulary.js =====
 const DEFAULT_VOCABULARY = [
@@ -14912,6 +14912,108 @@ const GIGA_CHEST_CONFIG = {
   icon: '🪐'
 };
 
+
+/**
+ * 🌌 OMEGA SINGULARITY (特異点・エンドゲームショップ) 設定
+ * T (兆) 〜 Qa (千兆) 単位の巨額SPを回収し、無限の成長を提供するエンドレスシステム
+ */
+const SINGULARITY_UPGRADES_CONFIG = [
+  {
+    key: 'singularityCoreLv',
+    name: 'SINGULARITY CORE',
+    subName: '特異点超次元エンジン',
+    desc: (lv) => `全獲得SPを最終乗算で永続ブースト！ (現在: +${((lv || 0) * 50)}%)`,
+    icon: '🌌',
+    baseCost: 1000000000000, // 1T (10^12)
+    costMultiplier: 2.5,
+    maxLevel: 999
+  },
+  {
+    key: 'omegaDiscoveryLv',
+    name: 'OMEGA DISCOVERY',
+    subName: '神話新単語覚醒マトリクス',
+    desc: (lv) => `未学習単語の初回正解倍率に特大加算！ (現在: +×${((lv || 0) * 2.0).toFixed(1)}倍)`,
+    icon: '🌟',
+    baseCost: 5000000000000, // 5T
+    costMultiplier: 2.6,
+    maxLevel: 999
+  },
+  {
+    key: 'chronoWarpLv',
+    name: 'CHRONO WARP DRIVE',
+    subName: '時空連続体歪曲ドライブ',
+    desc: (lv) => `1コンボごとの倍率加算を爆発的に強化！ (現在: +${((lv || 0) * 10)}%)`,
+    icon: '🌀',
+    baseCost: 10000000000000, // 10T
+    costMultiplier: 2.8,
+    maxLevel: 999
+  },
+  {
+    key: 'feverImmortalityLv',
+    name: 'AEGIS OF IMMORTALITY',
+    subName: '不滅のフィーバー結界',
+    desc: (lv) => `フィーバーモード(サドンデス)でミスしても、1セットにつき最大${lv || 0}回までコンボを切らずに救済！`,
+    icon: '🛡️',
+    baseCost: 50000000000000, // 50T
+    costMultiplier: 4.0, // Lv1: 50T, Lv2: 200T, Lv3: 800T, Lv4: 3.2Qa, Lv5: 12.8Qa
+    maxLevel: 5
+  },
+  {
+    key: 'cosmicHarvestLv',
+    name: 'COSMIC HARVESTER',
+    subName: '宇宙マスター収穫機',
+    desc: (lv) => `マスター単語正解時の獲得MPが永続増加！ (現在: +${((lv || 0) * 25)}%)`,
+    icon: '🪐',
+    baseCost: 20000000000000, // 20T
+    costMultiplier: 3.0,
+    maxLevel: 999
+  },
+  {
+    key: 'apexRealmOverlordLv',
+    name: 'APEX REALM OVERLORD',
+    subName: '極限次元覇権マトリクス',
+    desc: (lv) => `セットクリアボーナス総額を最終乗算で強化！ (現在: +${((lv || 0) * 50)}%)`,
+    icon: '👑',
+    baseCost: 100000000000000, // 100T (10^14)
+    costMultiplier: 3.2,
+    maxLevel: 999
+  },
+  {
+    key: 'omegaTranscendenceLv',
+    name: 'OMEGA TRANSCENDENCE',
+    subName: '頂点神話超越コア',
+    desc: (lv) => `全特異点スキルの効果＆全獲得SPをさらに倍増！ (現在: +${((lv || 0) * 100)}%)`,
+    icon: '💎',
+    baseCost: 1000000000000000, // 1 Qa (10^15)
+    costMultiplier: 3.5,
+    maxLevel: 999
+  }
+];
+const OMEGA_CHEST_CONFIG = {
+  cost: 1000000000000, // 1T
+  cost10x: 10000000000000, // 10T
+  name: 'OMEGA VOID CHEST',
+  icon: '🌌'
+};
+const OMEGA_GOD_CHEST_CONFIG = {
+  cost: 100000000000000, // 100T
+  cost10x: 1000000000000000, // 1 Qa
+  name: 'SINGULARITY GOD CHEST',
+  icon: '🪐'
+};
+const SINGULARITY_RANKS_CONFIG = [
+  { reqSP: 1000000000000, rank: 'I', title: '【次元の開拓者】', mult: 1.1, icon: '🌱' }, // 1T
+  { reqSP: 10000000000000, rank: 'II', title: '【星辰の覇者】', mult: 1.25, icon: '⭐' }, // 10T
+  { reqSP: 50000000000000, rank: 'III', title: '【銀河の巨神】', mult: 1.5, icon: '🪐' }, // 50T
+  { reqSP: 200000000000000, rank: 'IV', title: '【虚空の統括者】', mult: 2.0, icon: '🌌' }, // 200T
+  { reqSP: 1000000000000000, rank: 'V', title: '【特異点の創造神】', mult: 3.0, icon: '💎' }, // 1 Qa
+  { reqSP: 5000000000000000, rank: 'VI', title: '【星雲の支配者】', mult: 4.0, icon: '🔮' }, // 5 Qa
+  { reqSP: 25000000000000000, rank: 'VII', title: '【次元の超越者】', mult: 5.0, icon: '⚡' }, // 25 Qa
+  { reqSP: 100000000000000000, rank: 'VIII', title: '【無限の支配神】', mult: 7.0, icon: '🔥' }, // 100 Qa
+  { reqSP: 500000000000000000, rank: 'IX', title: '【宇宙の調停者】', mult: 10.0, icon: '🪐' }, // 500 Qa
+  { reqSP: 2000000000000000000, rank: 'X', title: '【全知全能のオメガ】', mult: 20.0, icon: '👑' } // 2 Qi
+];
+
     // ===== src/constants/masteryShop.js =====
 /**
  * MP (Mastery Point / マスターポイント) 専用ショップ設定
@@ -15891,6 +15993,29 @@ const calculateFeverModeMultiplier = (feverCombo = 1, feverAcceleratorLv = 0) =>
   const mult = 1.0 + (extra * linearRate) + (extra * extra * quadRate);
   return Number(mult.toFixed(2));
 };
+
+/**
+ * 累計奉納SPに応じた特異点ランクと倍率を取得
+ */
+const getSingularityRank = (sacrificedSP = 0) => {
+  const val = Number(sacrificedSP) || 0;
+  const ranks = [
+    { reqSP: 2000000000000000000, rank: 'X', title: '【全知全能のオメガ】', mult: 20.0, icon: '👑', nextReq: null },
+    { reqSP: 500000000000000000, rank: 'IX', title: '【宇宙の調停者】', mult: 10.0, icon: '🪐', nextReq: 2000000000000000000 },
+    { reqSP: 100000000000000000, rank: 'VIII', title: '【無限の支配神】', mult: 7.0, icon: '🔥', nextReq: 500000000000000000 },
+    { reqSP: 25000000000000000, rank: 'VII', title: '【次元の超越者】', mult: 5.0, icon: '⚡', nextReq: 100000000000000000 },
+    { reqSP: 5000000000000000, rank: 'VI', title: '【星雲の支配者】', mult: 4.0, icon: '🔮', nextReq: 25000000000000000 },
+    { reqSP: 1000000000000000, rank: 'V', title: '【特異点の創造神】', mult: 3.0, icon: '💎', nextReq: 5000000000000000 },
+    { reqSP: 200000000000000, rank: 'IV', title: '【虚空の統括者】', mult: 2.0, icon: '🌌', nextReq: 1000000000000000 },
+    { reqSP: 50000000000000, rank: 'III', title: '【銀河の巨神】', mult: 1.5, icon: '🪐', nextReq: 200000000000000 },
+    { reqSP: 10000000000000, rank: 'II', title: '【星辰の覇者】', mult: 1.25, icon: '⭐', nextReq: 50000000000000 },
+    { reqSP: 1000000000000, rank: 'I', title: '【次元の開拓者】', mult: 1.1, icon: '🌱', nextReq: 10000000000000 }
+  ];
+  for (const r of ranks) {
+    if (val >= r.reqSP) return r;
+  }
+  return { reqSP: 0, rank: 'NONE', title: '【未観測】', mult: 1.0, icon: '🌑', nextReq: 1000000000000 };
+};
 const calculateReward = ({
   isCorrect,
   isBoss,
@@ -15933,9 +16058,10 @@ const calculateReward = ({
     sp = Math.max(3, Math.round(sp * 0.2));
   }
 
-  // 2. コンボ乗数 (超越コアでさらに加算)
+  // 2. コンボ乗数 (超越コア & 時空歪曲ドライブでさらに加算)
+  const chronoWarpLv = upgrades.chronoWarpLv || 0;
   const transcendenceComboBonus = transcendenceCoreLv * 0.02;
-  const comboMult = 1.0 + (currentCombo * (0.05 + (multiplierBoostLv * 0.03) + transcendenceComboBonus));
+  const comboMult = 1.0 + (currentCombo * (0.05 + (multiplierBoostLv * 0.03) + transcendenceComboBonus + (chronoWarpLv * 0.10)));
   sp *= comboMult;
 
   // 3. FEVER乗数 (サージ加算付き)
@@ -15985,6 +16111,22 @@ const calculateReward = ({
   if (transcendenceCoreLv > 0) {
     sp *= (1.0 + (transcendenceCoreLv * 0.25));
   }
+  // 特異点超次元エンジン (Lv×50% 永続乗算)
+  const singularityCoreLv = upgrades.singularityCoreLv || 0;
+  if (singularityCoreLv > 0) {
+    sp *= (1.0 + (singularityCoreLv * 0.50));
+  }
+  // 頂点神話超越コア (Lv×100% 乗算)
+  const omegaTranscendenceLv = upgrades.omegaTranscendenceLv || 0;
+  if (omegaTranscendenceLv > 0) {
+    sp *= (1.0 + (omegaTranscendenceLv * 1.0));
+  }
+  // 特異点ブラックホール奉納ランク乗数
+  const totalSacrificedSP = upgrades.totalSacrificedSP || 0;
+  if (totalSacrificedSP > 0) {
+    const sRank = getSingularityRank(totalSacrificedSP);
+    if (sRank.mult > 1.0) sp *= sRank.mult;
+  }
 
   // 9. 単語3連勝マスター祝賀ボーナス (基礎1,500 SP + Lv×500 SP & 基礎SP ×1.5倍ブースト)
   let masterBonus = 0;
@@ -16025,9 +16167,10 @@ const calculateReward = ({
   // 13. 新規習得ボーナス (NEW WORD DISCOVERY: 既存正解得点への特大倍率乗算)
   let discoveryMultiplier = 1.0;
   if (isNewWord && !isBoss && !isHintMode) {
-    // 基礎2.0倍 + 強化Lv×1.0倍 (Lv1で3.0倍, Lv2で4.0倍, Lv5で7.0倍, Lv10で12.0倍...)
+    // 基礎2.0倍 + 強化Lv×1.0倍 + 神話新単語覚醒Lv×2.0倍
     const discoveryBoostLv = upgrades.discoveryBoostLv || 0;
-    discoveryMultiplier = 2.0 + (discoveryBoostLv * 1.0);
+    const omegaDiscoveryLv = upgrades.omegaDiscoveryLv || 0;
+    discoveryMultiplier = 2.0 + (discoveryBoostLv * 1.0) + (omegaDiscoveryLv * 2.0);
     sp *= discoveryMultiplier;
   }
 
@@ -16417,9 +16560,10 @@ const calculateClearBonus = (totalQuestions, correctCount, upgrades = {}, sessio
   const accuracy = correctCount / totalQuestions;
   const baseBonus = Math.round((baseFixed + apexFixedAdd + rateBonus) * accuracy);
 
-  // CLEAR MATRIX 倍率ブースト (+10% per Lv)
+  // CLEAR MATRIX 倍率ブースト (+10% per Lv) ＆ 極限次元覇権 (+50% per Lv)
   const clearBoostLv = upgrades?.clearBonusBoostLv || 0;
-  const multiplier = 1 + (clearBoostLv * 0.10);
+  const apexRealmOverlordLv = upgrades?.apexRealmOverlordLv || 0;
+  const multiplier = (1 + (clearBoostLv * 0.10)) * (1 + (apexRealmOverlordLv * 0.50));
 
   // 難易度レベルブースト (Level 2: 1.5x, etc.)
   const lvlMult = typeof level === 'number' ? level : getLevelMultiplier(level);
@@ -18360,6 +18504,117 @@ const ShopScreen = ({
     : CHEST_CONFIG;
 
   // ガチャ宝箱を開封するロジック (通常 / メガ / ギガ)
+  // 特異点オメガ宝箱 (通常 1T / 神話ゴッド 100T)
+  const [singularityChestTier, setSingularityChestTier] = useState('omega'); // 'omega' | 'god'
+  const handleOpenOmegaChest = (is10x = false) => {
+    const isGod = singularityChestTier === 'god';
+    const cfg = isGod ? OMEGA_GOD_CHEST_CONFIG : OMEGA_CHEST_CONFIG;
+    const cost = is10x ? cfg.cost10x : cfg.cost;
+    if (gameData.gold < cost || isOpeningChest) return;
+
+    setIsOpeningChest(true);
+    setChestResult(null);
+
+    setGameData(prev => ({
+      ...prev,
+      gold: prev.gold - cost,
+      omegaChestOpens: (prev.omegaChestOpens || 0) + (is10x ? 10 : 1)
+    }));
+    SoundFX.playUpgrade();
+
+    setTimeout(() => {
+      const times = is10x ? 10 : 1;
+      let totalSP = 0;
+      let totalMP = 0;
+      let shieldsAdded = 0;
+      let gotJackpot = false;
+
+      for (let i = 0; i < times; i++) {
+        const rand = Math.random() * 100;
+        if (isGod) {
+          // 神話ゴッド箱 (単発 100T / 10連 1Qa)
+          if (rand < 5) {
+            // 5% GOD JACKPOT 2,000T (2 Qa) SP
+            totalSP += 2000000000000000;
+            totalMP += 50000;
+            gotJackpot = true;
+          } else if (rand < 30) {
+            totalMP += 30000;
+            totalSP += 200000000000000;
+          } else if (rand < 60) {
+            totalMP += 15000;
+            shieldsAdded = 5;
+          } else {
+            totalMP += 8000;
+            totalSP += 50000000000000;
+          }
+        } else {
+          // 通常オメガ箱 (単発 1T / 10連 10T)
+          if (rand < 5) {
+            totalSP += 20000000000000;
+            totalMP += 5000;
+            gotJackpot = true;
+          } else if (rand < 25) {
+            totalMP += 5000;
+            totalSP += 2000000000000;
+          } else if (rand < 55) {
+            totalMP += 2000;
+            shieldsAdded = Math.max(shieldsAdded, 5);
+          } else {
+            totalMP += 1000;
+            totalSP += 500000000000;
+          }
+        }
+      }
+
+      setGameData(prev => ({
+        ...prev,
+        gold: prev.gold + totalSP,
+        totalEarned: (prev.totalEarned || 0) + totalSP,
+        mp: (prev.mp || 0) + totalMP,
+        totalEarnedMP: (prev.totalEarnedMP || 0) + totalMP,
+        shields: Math.max(prev.shields || 0, Math.min(5, (prev.shields || 0) + shieldsAdded))
+      }));
+
+      if (gotJackpot) {
+        cyberEffects.chest('giga');
+        SoundFX.playMastered();
+      } else {
+        SoundFX.playVictory();
+      }
+
+      setChestResult({
+        type: 'omega',
+        title: gotJackpot ? `🌌 COSMIC JACKPOT!! +${formatScore(totalSP)} SP & +${totalMP.toLocaleString()} MP!!` : `🌌 OMEGA 報酬: +${formatScore(totalSP)} SP ＆ +${totalMP.toLocaleString()} MP!`,
+        icon: '🌌',
+        class: gotJackpot ? 'text-fuchsia-300 neon-gold text-xl sm:text-2xl animate-pulse' : 'text-cyan-300 font-black text-lg'
+      });
+      setIsOpeningChest(false);
+    }, 600);
+  };
+
+  // 特異点ブラックホールSP奉納
+  const handleSacrificeSP = (amount) => {
+    const sacAmount = Math.min(gameData.gold, amount);
+    if (sacAmount <= 0) return;
+
+    const oldRank = getSingularityRank(gameData.totalSacrificedSP || 0);
+    const newTotal = (gameData.totalSacrificedSP || 0) + sacAmount;
+    const newRank = getSingularityRank(newTotal);
+
+    setGameData(prev => ({
+      ...prev,
+      gold: prev.gold - sacAmount,
+      totalSacrificedSP: newTotal
+    }));
+
+    SoundFX.playUpgrade();
+    if (newRank.rank !== oldRank.rank) {
+      SoundFX.playMastered();
+      cyberEffects.mastery();
+    }
+  };
+
   const handleOpenChest = () => {
     const cost = currentChestConfig.cost;
     if (gameData.gold < cost || isOpeningChest) return;
@@ -18511,31 +18766,43 @@ const ShopScreen = ({
           <div className="w-12"></div>
         </div>
 
-        {/* SHOP 切り替えタブ (SP SHOP vs MP VAULT) */}
-        <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/60 border border-slate-800 rounded-2xl mb-3 font-mono">
+        {/* SHOP 切り替えタブ (SP SHOP vs MP VAULT vs SINGULARITY) */}
+        <div className="grid grid-cols-3 gap-1 p-1 bg-black/60 border border-slate-800 rounded-2xl mb-3 font-mono">
           <button
             type="button"
             onClick={() => setActiveShopTab('sp')}
-            className={`py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 ${
               activeShopTab === 'sp'
                 ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <span>🪙 SP SHOP</span>
-            <span className="text-[9px] opacity-80">({formatScore(gameData.gold)})</span>
+            <span>🪙 SP</span>
+            <span className="text-[8px] opacity-80">({formatScore(gameData.gold)})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveShopTab('mp')}
-            className={`py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 ${
               activeShopTab === 'mp'
                 ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.5)]'
                 : 'text-slate-400 hover:text-amber-300'
             }`}
           >
-            <span>👑 MP VAULT</span>
-            <span className="text-[9px] opacity-80">({(gameData.mp || 0).toLocaleString()} MP)</span>
+            <span>👑 MP</span>
+            <span className="text-[8px] opacity-80">({formatScore(gameData.mp || 0)})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveShopTab('singularity')}
+            className={`py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 ${
+              activeShopTab === 'singularity'
+                ? 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.6)] animate-pulse'
+                : 'text-fuchsia-400/80 hover:text-fuchsia-300'
+            }`}
+          >
+            <span>🌌 特異点</span>
+            <span className="text-[8px] opacity-80">(T/Qa)</span>
           </button>
         </div>
 
@@ -18873,6 +19140,233 @@ const ShopScreen = ({
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* 🌌 特異点ショップ (SINGULARITY ENDGAME VAULT) */
+          <>
+            {/* 特異点残高 ＆ 奉納ランクヘッダー */}
+            {(() => {
+              const currentRank = getSingularityRank(gameData.totalSacrificedSP || 0);
+              return (
+                <div className="bg-gradient-to-br from-fuchsia-950/90 via-slate-900 to-indigo-950/90 border-2 border-fuchsia-500/80 rounded-3xl p-3 mb-3 text-center shadow-[0_0_30px_rgba(217,70,239,0.3)]">
+                  <div className="flex items-center justify-between text-[9px] font-mono text-fuchsia-300 mb-1 border-b border-fuchsia-500/30 pb-1">
+                    <span>🌌 OMEGA SINGULARITY FORGE</span>
+                    <span className="bg-fuchsia-950 text-amber-300 border border-fuchsia-500/50 px-1.5 py-0.2 rounded font-black">
+                      RANK {currentRank.rank} {currentRank.title} (×{currentRank.mult.toFixed(2)}倍)
+                    </span>
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-black text-fuchsia-200 font-mono tracking-tight mt-1 flex items-center justify-center gap-2">
+                    <span>🌌</span>
+                    <span>{formatScore(gameData.gold)}</span>
+                    <span className="text-xs sm:text-sm text-fuchsia-400 font-normal">SP</span>
+                  </div>
+                  <div className="text-[9px] text-fuchsia-300/80 font-mono mt-1">
+                    累計奉納額: <strong className="text-amber-300">{formatScore(gameData.totalSacrificedSP || 0)} SP</strong>
+                    {currentRank.nextReq && (
+                      <span className="text-slate-400 ml-1">
+                        (次ランクまであと {formatScore(currentRank.nextReq - (gameData.totalSacrificedSP || 0))} SP)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* OMEGA CHEST (特異点宝箱: VOID 1T vs GOD 100T) */}
+            <div className="bg-gradient-to-br from-purple-950/80 to-slate-900 border-2 border-purple-500/80 rounded-2xl p-3 mb-3 text-center shadow-[0_0_20px_rgba(168,85,247,0.3)] font-mono">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-black text-purple-300 flex items-center gap-1">
+                  <span>🌌</span>
+                  <span>{singularityChestTier === 'god' ? 'SINGULARITY GOD CHEST' : 'OMEGA VOID CHEST'}</span>
+                </span>
+                {/* 宝箱ランク切り替え */}
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSingularityChestTier('omega')}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold ${
+                      singularityChestTier === 'omega'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-black/50 text-slate-400'
+                    }`}
+                  >
+                    VOID (1T)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSingularityChestTier('god')}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold ${
+                      singularityChestTier === 'god'
+                        ? 'bg-gradient-to-r from-amber-500 to-fuchsia-500 text-black font-black animate-pulse'
+                        : 'bg-black/50 text-slate-400'
+                    }`}
+                  >
+                    👑 GOD (100T)
+                  </button>
+                </div>
+              </div>
+              <div className="text-[9px] text-slate-300 mb-2">
+                {singularityChestTier === 'god'
+                  ? '超巨額100T宝箱！数万MPや最大2 Qa SPの超次元ジャックポットが噴出！'
+                  : '数千MPやシールド全快、最大20T SPジャックポットが噴出！'}
+              </div>
+
+              {chestResult && chestResult.type === 'omega' && (
+                <div className="p-2 mb-2 rounded-xl bg-purple-950/90 border border-purple-400 animate-pulse text-xs font-mono">
+                  <div className={chestResult.class}>{chestResult.title}</div>
+                </div>
+              )}
+
+              {(() => {
+                const cfg = singularityChestTier === 'god' ? OMEGA_GOD_CHEST_CONFIG : OMEGA_CHEST_CONFIG;
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={isOpeningChest || gameData.gold < cfg.cost}
+                      onClick={() => handleOpenOmegaChest(false)}
+                      className={`py-2 px-2 rounded-xl font-black text-xs transition-all active:scale-95 shadow ${
+                        gameData.gold >= cfg.cost && !isOpeningChest
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <div>1回 開封</div>
+                      <div className="text-[9px] opacity-90">{formatScore(cfg.cost)} SP</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isOpeningChest || gameData.gold < cfg.cost10x}
+                      onClick={() => handleOpenOmegaChest(true)}
+                      className={`py-2 px-2 rounded-xl font-black text-xs transition-all active:scale-95 shadow ${
+                        gameData.gold >= cfg.cost10x && !isOpeningChest
+                          ? 'bg-gradient-to-r from-fuchsia-600 via-pink-600 to-amber-500 hover:from-fuchsia-500 hover:to-amber-400 text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] animate-pulse'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>⚡ 10連開封</span>
+                      </div>
+                      <div className="text-[9px] opacity-90">{formatScore(cfg.cost10x)} SP</div>
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* 特異点ブラックホール奉納 (COSMIC ALTAR) */}
+            <div className="bg-gradient-to-br from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/60 rounded-2xl p-2.5 mb-3 font-mono text-left">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-black text-cyan-300 flex items-center gap-1">
+                  <span>🕳️</span>
+                  <span>BLACK HOLE ALTAR (特異点奉納の祭壇)</span>
+                </span>
+                <span className="text-[8px] text-slate-400">莫大なSPを捧げ名誉と全SP乗数を獲得</span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 mt-2">
+                {[
+                  { label: '1T', amount: 1000000000000 },
+                  { label: '10T', amount: 10000000000000 },
+                  { label: '100T', amount: 100000000000000 },
+                  { label: '1 Qa', amount: 1000000000000000 },
+                  { label: '10 Qa', amount: 10000000000000000 },
+                  { label: '50% 奉納', amount: Math.floor(gameData.gold * 0.5) }
+                ].map((item, idx) => {
+                  const canPay = gameData.gold >= item.amount && item.amount > 0;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={!canPay}
+                      onClick={() => handleSacrificeSP(item.amount)}
+                      className={`p-1.5 rounded-xl text-center transition-all active:scale-95 text-[9px] font-black ${
+                        canPay
+                          ? 'bg-gradient-to-r from-indigo-900 to-purple-900 hover:from-indigo-800 border border-indigo-500/60 text-cyan-200'
+                          : 'bg-slate-900/50 border border-slate-800 text-slate-600 cursor-not-allowed'
+                      }`}
+                    >
+                      <div>{item.label}</div>
+                      <div className="text-[7px] text-slate-400 mt-0.5">{formatScore(item.amount)}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 特異点アップグレード一覧 (SINGULARITY_UPGRADES_CONFIG) */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 mb-2 shadow-inner">
+              <div className="flex items-center justify-between text-xs font-bold font-mono mb-2 pb-1 border-b border-slate-800 text-fuchsia-300">
+                <span className="flex items-center gap-1">
+                  <span>🌌</span>
+                  <span>SINGULARITY UPGRADES (全{SINGULARITY_UPGRADES_CONFIG.length}種)</span>
+                </span>
+                <span className="text-yellow-400">兆・京の超領域</span>
+              </div>
+
+              <div className="space-y-2 max-h-[46vh] overflow-y-auto pr-1">
+                {SINGULARITY_UPGRADES_CONFIG.map(upg => {
+                  const currentLv = gameData.upgrades?.[upg.key] || 0;
+                  const cost = Math.round(upg.baseCost * Math.pow(upg.costMultiplier, currentLv));
+                  const isMax = currentLv >= upg.maxLevel;
+                  const canAfford = gameData.gold >= cost;
+
+                  return (
+                    <div
+                      key={upg.key}
+                      className="bg-slate-950 border border-purple-500/40 rounded-2xl p-2.5 flex items-center justify-between hover:border-purple-400 transition-all gap-2 font-mono"
+                    >
+                      <div className="flex items-center gap-2 pr-1 min-w-0">
+                        <div className="text-2xl p-1.5 bg-purple-950/80 border border-purple-500/60 rounded-xl flex-shrink-0">
+                          {upg.icon}
+                        </div>
+                        <div className="text-left min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black text-white truncate">{upg.name}</span>
+                            <span className="text-[8px] bg-purple-950 text-fuchsia-300 border border-purple-500/40 px-1 py-0.2 rounded font-bold flex-shrink-0">
+                              Lv.{currentLv}{upg.maxLevel < 999 ? `/${upg.maxLevel}` : ''}
+                            </span>
+                          </div>
+                          <div className="text-[8px] text-purple-300/80 mt-0.5">
+                            {upg.subName}
+                          </div>
+                          <div className="text-[9px] text-slate-300 mt-0.5 leading-tight">
+                            {upg.desc(currentLv)}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isMax && canAfford) {
+                            setGameData(p => ({
+                              ...p,
+                              gold: p.gold - cost,
+                              upgrades: {
+                                ...(p.upgrades || {}),
+                                [upg.key]: currentLv + 1
+                              }
+                            }));
+                            SoundFX.playUpgrade();
+                            cyberEffects.levelUp();
+                          }
+                        }}
+                        disabled={isMax || !canAfford}
+                        className={`font-black text-[10px] sm:text-[11px] px-2.5 py-2 rounded-xl shadow whitespace-nowrap active:scale-95 transition-all min-w-[76px] text-center flex-shrink-0 ${
+                          isMax
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : canAfford
+                            ? 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 hover:from-fuchsia-500 text-white shadow-[0_0_15px_rgba(217,70,239,0.5)]'
+                            : 'bg-slate-800 text-slate-500'
+                        }`}
+                      >
+                        {isMax ? 'MAX' : `${formatScore(cost)} SP`}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </>
@@ -19932,6 +20426,7 @@ function App() {
   const [isEndlessMode, setIsEndlessMode] = useState(false);
   const [isFeverMode, setIsFeverMode] = useState(false);
   const [challengeShieldAvailable, setChallengeShieldAvailable] = useState(false);
+  const [feverImmortalityUsesLeft, setFeverImmortalityUsesLeft] = useState(0);
   const [feverMilestone, setFeverMilestone] = useState(null);
   const [isBossQuestion, setIsBossQuestion] = useState(false);
   const [showBossIntro, setShowBossIntro] = useState(false);
@@ -20378,6 +20873,7 @@ function App() {
     setIsEndlessMode(mode === 'endless');
     setIsFeverMode(mode === 'fever');
     setChallengeShieldAvailable(selectedLevel !== 'Level 1');
+    setFeverImmortalityUsesLeft((mode === 'fever') ? (gameData.upgrades?.feverImmortalityLv || 0) : 0);
     if (mode === 'fever') {
       setIsHintMode(false);
     }
@@ -20602,10 +21098,20 @@ function App() {
           }
         }
       } else {
-        // フィーバーモードはサドンデス（シールドによる救済なし、即終了）
-        shieldSaved = false;
-        calculatedCombo = 0;
-        setCurrentSessionCombo(0);
+        // フィーバーモードはサドンデスだが、AEGIS OF IMMORTALITY (不滅結界) があれば救済！
+        if (feverImmortalityUsesLeft > 0) {
+          setFeverImmortalityUsesLeft(prev => prev - 1);
+          shieldSaved = true;
+          calculatedCombo = currentSessionCombo;
+          setShieldUsedThisTurn(true);
+          SoundFX.playJackpot();
+          SoundFX.vibrate([100, 50, 100, 50, 200]);
+          setToastNotice(`🛡️ AEGIS OF IMMORTALITY 発動！不滅結界により連勝を守りました！(残り${feverImmortalityUsesLeft - 1}回)`);
+        } else {
+          shieldSaved = false;
+          calculatedCombo = 0;
+          setCurrentSessionCombo(0);
+        }
       }
     } else if (isCorrect) {
       if (!isCheated && !isRepeatedFarm) {
@@ -20644,7 +21150,7 @@ function App() {
       dailyOverdriveMultiplier: dailyTier.multiplier,
       levelMultiplier,
       isNewWord,
-      upgrades: { ...gameData.upgrades, ...(gameData.mpUpgrades || {}) }
+      upgrades: { ...gameData.upgrades, ...(gameData.mpUpgrades || {}), totalSacrificedSP: gameData.totalSacrificedSP || 0 }
     });
 
     // デイリーステップアップ指令 (Level 2 を 3問クリアで 15,000 SP & 20 MP 即時付与！)
@@ -20724,6 +21230,12 @@ function App() {
       if (goldenLv > 0 && Math.random() < (goldenLv * 0.10)) {
         isGoldenCard = true;
         earnedMP *= 3;
+      }
+
+      // 🪐 宇宙マスター収穫機 (cosmicHarvestLv: +25% per Lv)
+      const harvestLv = gameData.upgrades?.cosmicHarvestLv || 0;
+      if (harvestLv > 0) {
+        earnedMP = Math.round(earnedMP * (1.0 + harvestLv * 0.25));
       }
     }
 
